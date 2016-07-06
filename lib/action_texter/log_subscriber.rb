@@ -2,7 +2,7 @@ require 'active_support/log_subscriber'
 
 module ActionTexter
   # Implements the ActiveSupport::LogSubscriber for logging notifications when
-  # message is delivered or received.
+  # message is delivered.
   class LogSubscriber < ActiveSupport::LogSubscriber
     # An message was delivered.
     def deliver(event)
@@ -11,12 +11,6 @@ module ActionTexter
         "Sent text to #{recipients} (#{event.duration.round(1)}ms)"
       end
 
-      debug { event.payload[:text] }
-    end
-
-    # An message was received.
-    def receive(event)
-      info { "Received text (#{event.duration.round(1)}ms)" }
       debug { event.payload[:text] }
     end
 

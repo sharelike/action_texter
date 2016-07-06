@@ -472,27 +472,6 @@ module ActionTexter
       #    config.action_texter.default_options = { from: "no-reply@example.org" }
       alias :default_options= :default
 
-      # Receives a raw message, parses it into an message object, decodes it,
-      # instantiates a new texter, and passes the message object to the texter
-      # object's +receive+ method.
-      #
-      # If you want your texter to be able to process incoming messages, you'll
-      # need to implement a +receive+ method that accepts the raw message string
-      # as a parameter:
-      #
-      #   class MyTexter < ActionTexter::Base
-      #     def receive(text)
-      #       # ...
-      #     end
-      #   end
-      def receive(raw_text)
-        ActiveSupport::Notifications.instrument("receive.action_texter") do |payload|
-          text = Text.new(raw_text)
-          set_payload_for_text(payload, text)
-          new.receive(text)
-        end
-      end
-
       # Wraps an message delivery inside of <tt>ActiveSupport::Notifications</tt> instrumentation.
       #
       # This method is actually called by the <tt>Text::Message</tt> object itself
@@ -539,8 +518,7 @@ module ActionTexter
 
     # Instantiate a new texter object. If +method_name+ is not +nil+, the texter
     # will be initialized according to the named method. If not, the texter will
-    # remain uninitialized (useful when you only need to invoke the "receive"
-    # method, for instance).
+    # remain uninitialized.
     def initialize
       super()
       @_text_was_called = false
