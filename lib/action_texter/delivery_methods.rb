@@ -1,4 +1,6 @@
 require 'tmpdir'
+require_relative 'adapter/file'
+require_relative 'adapter/test_adapter'
 
 module ActionTexter
   # This module handles everything related to text delivery, from registering
@@ -20,38 +22,21 @@ module ActionTexter
       self.deliver_later_queue_name = :texters
 
       self.delivery_methods = {}.freeze
-      self.delivery_method  = :smtp
+      self.delivery_method  = :file
 
-      add_delivery_method :smtp, Text::SMTP,
-        address:              "localhost",
-        port:                 25,
-        domain:               'localhost.localdomain',
-        user_name:            nil,
-        password:             nil,
-        authentication:       nil,
-        enable_starttls_auto: true
+      add_delivery_method :file, Adapter::File,
+        location: defined?(Rails.root) ? "#{Rails.root}/tmp/texters" : "#{Dir.tmpdir}/texters"
 
-      add_delivery_method :file, Text::FileDelivery,
-        location: defined?(Rails.root) ? "#{Rails.root}/tmp/texts" : "#{Dir.tmpdir}/texts"
-
-      add_delivery_method :sendtext, Text::Sendtext,
-        location:  '/usr/sbin/sendtext',
-        arguments: '-i'
-
-      add_delivery_method :test, Text::TestTexter
+      add_delivery_method :test, Adapter::TestAdapter
     end
 
     # Helpers for creating and wrapping delivery behavior, used by DeliveryMethods.
     module ClassMethods
       # Provides a list of messages that have been delivered by Text::TestTexter
-      delegate :deliveries, :deliveries=, to: Text::TestTexter
+      delegate :deliveries, :deliveries=, to: Adapter::TestAdapter
 
       # Adds a new delivery method through the given class using the given
       # symbol as alias and the default options supplied.
-      #
-      #   add_delivery_method :sendtext, Text::Sendtext,
-      #     location:  '/usr/sbin/sendtext',
-      #     arguments: '-i -t'
       def add_delivery_method(symbol, klass, default_options={})
         class_attribute(:"#{symbol}_settings") unless respond_to?(:"#{symbol}_settings")
         send(:"#{symbol}_settings=", default_options)
@@ -67,12 +52,12 @@ module ActionTexter
           raise "Delivery method cannot be nil"
         when Symbol
           if klass = delivery_methods[method]
-            text.delivery_method(klass, (send(:"#{method}_settings") || {}).merge(options || {}))
+            text.delivery_method = klass.new (send(:"#{method}_settings") || {}).merge(options || {}))
           else
             raise "Invalid delivery method #{method.inspect}"
           end
         else
-          text.delivery_method(method)
+          text.delivery_method = method
         end
 
         text.perform_deliveries    = perform_deliveries
