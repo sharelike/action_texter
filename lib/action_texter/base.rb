@@ -2,7 +2,6 @@ require 'active_support/core_ext/string/inflections'
 require 'active_support/core_ext/hash/except'
 require 'active_support/core_ext/module/anonymous'
 
-require 'action_texter/message'
 require 'action_texter/log_subscriber'
 require 'action_texter/rescuable'
 
