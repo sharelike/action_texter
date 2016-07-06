@@ -1,9 +1,8 @@
-require 'text'
-require 'action_texter/collector'
 require 'active_support/core_ext/string/inflections'
 require 'active_support/core_ext/hash/except'
 require 'active_support/core_ext/module/anonymous'
 
+require 'action_texter/message'
 require 'action_texter/log_subscriber'
 require 'action_texter/rescuable'
 
@@ -19,62 +18,25 @@ module ActionTexter
   # The generated model inherits from <tt>ApplicationTexter</tt> which in turn
   # inherits from <tt>ActionTexter::Base</tt>. A texter model defines methods
   # used to generate an message message. In these methods, you can setup variables to be used in
-  # the texter views, options on the text itself such as the <tt>:from</tt> address.
+  # the texter views, options on the text itself such as the <tt>:charset</tt>.
   #
   #   class ApplicationTexter < ActionTexter::Base
-  #     default from: 'from@example.com'
+  #     default charset: 'UTF-8'
   #     layout 'texter'
   #   end
   #
   #   class NotifierTexter < ApplicationTexter
-  #     default from: 'no-reply@example.com',
-  #             return_path: 'system@example.com'
-  #
   #     def welcome(recipient)
   #       @account = recipient
-  #       text(to: recipient.message_address_with_name,
-  #            bcc: ["bcc@example.com", "Order Watcher <watcher@example.com>"])
+  #       text(to: recipient.phone_number)
   #     end
   #   end
   #
   # Within the texter method, you have access to the following methods:
   #
-  # * <tt>headers[]=</tt> - Allows you to specify any header field in your message such
-  #   as <tt>headers['X-No-Spam'] = 'True'</tt>. Note that declaring a header multiple times
-  #   will add many fields of the same name. Read #headers doc for more information.
-  #
-  # * <tt>headers(hash)</tt> - Allows you to specify multiple headers in your message such
-  #   as <tt>headers({'X-No-Spam' => 'True', 'In-Reply-To' => '1234@message.id'})</tt>
-  #
   # * <tt>text</tt> - Allows you to specify message to be sent.
   #
-  # The hash passed to the text method allows you to specify any header that a <tt>Text::Message</tt>
-  # will accept (any valid message header including optional fields).
-  #
-  # The text method, if not passed a block, will inspect your views and send all the views with
-  # the same name as the method, so the above action would send the +welcome.text.erb+ view
-  # file as well as the +welcome.html.erb+ view file in a +multipart/alternative+ message.
-  #
-  # If you want to explicitly render only certain templates, pass a block:
-  #
-  #   text(to: user.message) do |format|
-  #     format.text
-  #     format.html
-  #   end
-  #
-  # The block syntax is also useful in providing information specific to a part:
-  #
-  #   text(to: user.message) do |format|
-  #     format.text(content_transfer_encoding: "base64")
-  #     format.html
-  #   end
-  #
-  # Or even to render a special view:
-  #
-  #   text(to: user.message) do |format|
-  #     format.text
-  #     format.html { render "some_other_template" }
-  #   end
+  # The hash passed to the text method allows you to specify any option that will accept.
   #
   # = Texter views
   #
@@ -102,7 +64,6 @@ module ActionTexter
   #
   #   You got a new note from <%= message.from %>!
   #   <%= truncate(@note.body, length: 25) %>
-  #
   #
   # = Generating URLs
   #
@@ -139,10 +100,10 @@ module ActionTexter
   #   text.deliver_now                               # generates and sends the message now
   #
   # The <tt>ActionTexter::MessageDelivery</tt> class is a wrapper around a delegate that will call
-  # your method to generate the text. If you want direct access to the delegator, or <tt>Text::Message</tt>,
+  # your method to generate the text. If you want direct access to the delegator, or <tt>ActionTexter::Message</tt>,
   # you can call the <tt>message</tt> method on the <tt>ActionTexter::MessageDelivery</tt> object.
   #
-  #   NotifierTexter.welcome(User.first).message     # => a Text::Message object
+  #   NotifierTexter.welcome(User.first).message     # => a ActionTexter::Message object
   #
   # Action Texter is nicely integrated with Active Job so you can generate and send messages in the background
   # (example: outside of the request-response cycle, so the user doesn't have to wait on it):
@@ -154,56 +115,24 @@ module ActionTexter
   # You never instantiate your texter class. Rather, you just call the method you defined on the class itself.
   # All instance methods are expected to return a message object to be sent.
   #
-  # = Multipart Etexts
-  #
-  # Multipart messages can also be used implicitly because Action Texter will automatically detect and use
-  # multipart templates, where each template is named after the name of the action, followed by the content
-  # type. Each such detected template will be added to the message, as a separate part.
-  #
-  # For example, if the following templates exist:
-  # * signup_notification.text.erb
-  # * signup_notification.html.erb
-  # * signup_notification.xml.builder
-  # * signup_notification.yml.erb
-  #
-  # Each would be rendered and added as a separate part to the message, with the corresponding content
-  # type. The content type for the entire message is automatically set to <tt>multipart/alternative</tt>,
-  # which indicates that the message contains multiple different representations of the same message
-  # body. The same instance variables defined in the action are passed to all message templates.
-  #
   # = Default Hash
   #
   # Action Texter provides some intelligent defaults for your messages, these are usually specified in a
   # default method inside the class definition:
   #
   #   class NotifierTexter < ApplicationTexter
-  #     default sender: 'system@example.com'
+  #     default charset: 'Big5'
   #   end
   #
-  # You can pass in any header value that a <tt>Text::Message</tt> accepts. Out of the box,
-  # <tt>ActionTexter::Base</tt> sets the following:
+  # You can pass in any option value. Out of the box, <tt>ActionTexter::Base</tt> sets the following:
   #
-  # * <tt>mime_version: "1.0"</tt>
   # * <tt>charset:      "UTF-8"</tt>
-  # * <tt>content_type: "text/plain"</tt>
-  # * <tt>parts_order:  [ "text/plain", "text/enriched", "text/html" ]</tt>
   #
-  # <tt>parts_order</tt> and <tt>charset</tt> are not actually valid <tt>Text::Message</tt> header fields,
-  # but Action Texter translates them appropriately and sets the correct values.
-  #
-  # As you can pass in any header, you need to either quote the header as a string, or pass it in as
-  # an underscored symbol, so the following will work:
-  #
-  #   class NotifierTexter < ApplicationTexter
-  #     default 'Content-Transfer-Encoding' => '7bit',
-  #             content_description: 'This is a description'
-  #   end
-  #
-  # Finally, Action Texter also supports passing <tt>Proc</tt> objects into the default hash, so you
+  # Action Texter also supports passing <tt>Proc</tt> objects into the default hash, so you
   # can define methods that evaluate as the message is being generated:
   #
   #   class NotifierTexter < ApplicationTexter
-  #     default 'X-Special-Header' => Proc.new { my_method }
+  #     default to: Proc.new { my_method }
   #
   #     private
   #
@@ -219,16 +148,16 @@ module ActionTexter
   # It is also possible to set these default options that will be used in all texters through
   # the <tt>default_options=</tt> configuration in <tt>config/application.rb</tt>:
   #
-  #    config.action_texter.default_options = { from: "no-reply@example.org" }
+  #    config.action_texter.default_options = { charset: "UTF-8" }
   #
   # = Callbacks
   #
   # You can specify callbacks using before_action and after_action for configuring your messages.
-  # This may be useful, for example, when you want to add default inline attachments for all
+  # This may be useful, for example, when you want to add default variables for all
   # messages sent out by a certain texter class:
   #
   #   class NotifierTexter < ApplicationTexter
-  #     before_action :add_inline_attachment!
+  #     before_action :set_title!
   #
   #     def welcome
   #       text
@@ -236,8 +165,8 @@ module ActionTexter
   #
   #     private
   #
-  #       def add_inline_attachment!
-  #         attachments.inline["footer.jpg"] = File.read('/path/to/filename.jpg')
+  #       def set_title!
+  #         @title = "hello"
   #       end
   #   end
   #
@@ -248,7 +177,7 @@ module ActionTexter
   #
   # Note that unless you have a specific reason to do so, you should prefer
   # using <tt>before_action</tt> rather than <tt>after_action</tt> in your
-  # Action Texter classes so that headers are parsed properly.
+  # Action Texter classes so that options are parsed properly.
   #
   # = Configuration options
   #
@@ -260,31 +189,6 @@ module ActionTexter
   #
   # * <tt>logger</tt> - the logger is used for generating information on the texting run if available.
   #   Can be set to +nil+ for no logging. Compatible with both Ruby's own +Logger+ and Log4r loggers.
-  #
-  # * <tt>smtp_settings</tt> - Allows detailed configuration for <tt>:smtp</tt> delivery method:
-  #   * <tt>:address</tt> - Allows you to use a remote text server. Just change it from its default
-  #     "localhost" setting.
-  #   * <tt>:port</tt> - On the off chance that your text server doesn't run on port 25, you can change it.
-  #   * <tt>:domain</tt> - If you need to specify a HELO domain, you can do it here.
-  #   * <tt>:user_name</tt> - If your text server requires authentication, set the username in this setting.
-  #   * <tt>:password</tt> - If your text server requires authentication, set the password in this setting.
-  #   * <tt>:authentication</tt> - If your text server requires authentication, you need to specify the
-  #     authentication type here.
-  #     This is a symbol and one of <tt>:plain</tt> (will send the password Base64 encoded), <tt>:login</tt> (will
-  #     send the password Base64 encoded) or <tt>:cram_md5</tt> (combines a Challenge/Response mechanism to exchange
-  #     information and a cryptographic Message Digest 5 algorithm to hash important information)
-  #   * <tt>:enable_starttls_auto</tt> - Detects if STARTTLS is enabled in your SMTP server and starts
-  #     to use it. Defaults to <tt>true</tt>.
-  #   * <tt>:openssl_verify_mode</tt> - When using TLS, you can set how OpenSSL checks the certificate. This is
-  #     really useful if you need to validate a self-signed and/or a wildcard certificate. You can use the name
-  #     of an OpenSSL verify constant (<tt>'none'</tt>, <tt>'peer'</tt>, <tt>'client_once'</tt>,
-  #     <tt>'fail_if_no_peer_cert'</tt>) or directly the constant (<tt>OpenSSL::SSL::VERIFY_NONE</tt>,
-  #     <tt>OpenSSL::SSL::VERIFY_PEER</tt>, ...).
-  #
-  # * <tt>sendtext_settings</tt> - Allows you to override options for the <tt>:sendtext</tt> delivery method.
-  #   * <tt>:location</tt> - The location of the sendtext executable. Defaults to <tt>/usr/sbin/sendtext</tt>.
-  #   * <tt>:arguments</tt> - The command line arguments. Defaults to <tt>-i -t</tt> with <tt>-f sender@address</tt>
-  #     added automatically before the message is sent.
   #
   # * <tt>file_settings</tt> - Allows you to override options for the <tt>:file</tt> delivery method.
   #   * <tt>:location</tt> - The directory into which messages will be written. Defaults to the application
@@ -332,47 +236,10 @@ module ActionTexter
 
     class_attribute :default_params
     self.default_params = {
-      mime_version: "1.0",
-      charset:      "UTF-8",
-      content_type: "text/plain",
-      parts_order:  [ "text/plain", "text/enriched", "text/html" ]
+      charset:      "UTF-8"
     }.freeze
 
     class << self
-      # Register one or more Observers which will be notified when text is delivered.
-      def register_observers(*observers)
-        observers.flatten.compact.each { |observer| register_observer(observer) }
-      end
-
-      # Register one or more Interceptors which will be called before text is sent.
-      def register_interceptors(*interceptors)
-        interceptors.flatten.compact.each { |interceptor| register_interceptor(interceptor) }
-      end
-
-      # Register an Observer which will be notified when text is delivered.
-      # Either a class, string or symbol can be passed in as the Observer.
-      # If a string or symbol is passed in it will be camelized and constantized.
-      def register_observer(observer)
-        Text.register_observer(observer_class_for(observer))
-      end
-
-      # Register an Interceptor which will be called before text is sent.
-      # Either a class, string or symbol can be passed in as the Interceptor.
-      # If a string or symbol is passed in it will be camelized and constantized.
-      def register_interceptor(interceptor)
-        Text.register_interceptor(observer_class_for(interceptor))
-      end
-
-      def observer_class_for(value) # :nodoc:
-        case value
-        when String, Symbol
-          value.to_s.camelize.constantize
-        else
-          value
-        end
-      end
-      private :observer_class_for
-
       # Returns the name of current texter. This method is also being used as a path for a view lookup.
       # If this is an anonymous texter, this method will return +anonymous+ instead.
       def texter_name
@@ -384,7 +251,7 @@ module ActionTexter
 
       # Sets the defaults through app configuration:
       #
-      #     config.action_texter.default(from: "no-reply@example.org")
+      #     config.action_texter.default(charset: "Big5")
       #
       # Aliased by ::default_options=
       def default(value = nil)
@@ -393,35 +260,25 @@ module ActionTexter
       end
       # Allows to set defaults through app configuration:
       #
-      #    config.action_texter.default_options = { from: "no-reply@example.org" }
+      #    config.action_texter.default_options = { charset: "Big5" }
       alias :default_options= :default
 
       # Wraps an message delivery inside of <tt>ActiveSupport::Notifications</tt> instrumentation.
       #
-      # This method is actually called by the <tt>Text::Message</tt> object itself
-      # through a callback when you call <tt>:deliver</tt> on the <tt>Text::Message</tt>,
-      # calling +deliver_text+ directly and passing a <tt>Text::Message</tt> will do
+      # This method is actually called by the <tt>ActionTexter::Message</tt> object itself
+      # through a callback when you call <tt>:deliver</tt> on the <tt>ActionTexter::Message</tt>,
+      # calling +deliver_text+ directly and passing a <tt>ActionTexter::Message</tt> will do
       # nothing except tell the logger you sent the message.
       def deliver_text(text) #:nodoc:
         ActiveSupport::Notifications.instrument("deliver.action_texter") do |payload|
-          set_payload_for_text(payload, text)
+          payload[:texter] = name
+          payload[:to] = message.to
+          payload[:body] = message.body
           yield # Let Text do the delivery actions
         end
       end
 
     protected
-
-      def set_payload_for_text(payload, text) #:nodoc:
-        payload[:texter]     = name
-        payload[:message_id] = text.message_id
-        payload[:subject]    = text.subject
-        payload[:to]         = text.to
-        payload[:from]       = text.from
-        payload[:bcc]        = text.bcc if text.bcc.present?
-        payload[:cc]         = text.cc  if text.cc.present?
-        payload[:date]       = text.date
-        payload[:text]       = text.encoded
-      end
 
       def method_missing(method_name, *args) # :nodoc:
         if action_methods.include?(method_name.to_s)
@@ -444,9 +301,9 @@ module ActionTexter
     # will be initialized according to the named method. If not, the texter will
     # remain uninitialized.
     def initialize
-      super()
+      super
       @_text_was_called = false
-      @_message = Text.new
+      @_message = Message.new
     end
 
     def process(method_name, *args) #:nodoc:
@@ -457,13 +314,13 @@ module ActionTexter
 
       ActiveSupport::Notifications.instrument("process.action_texter", payload) do
         super
-        @_message = NullText.new unless @_text_was_called
+        @_message = NullMessage.new unless @_text_was_called
       end
     end
 
-    class NullText #:nodoc:
+    class NullMessage #:nodoc:
+      def to; [] end
       def body; '' end
-      def header; {} end
 
       def respond_to?(string, include_all=false)
         true
@@ -479,102 +336,32 @@ module ActionTexter
       self.class.texter_name
     end
 
-    # Allows you to pass random and unusual headers to the new <tt>Text::Message</tt>
-    # object which will add them to itself.
-    #
-    #   headers['X-Special-Domain-Specific-Header'] = "SecretValue"
-    #
-    # You can also pass a hash into headers of header field names and values,
-    # which will then be set on the <tt>Text::Message</tt> object:
-    #
-    #   headers 'X-Special-Domain-Specific-Header' => "SecretValue",
-    #           'In-Reply-To' => incoming.message_id
-    #
-    # The resulting <tt>Text::Message</tt> will have the following in its header:
-    #
-    #   X-Special-Domain-Specific-Header: SecretValue
-    #
-    # Note about replacing already defined headers:
-    #
-    # * +subject+
-    # * +sender+
-    # * +from+
-    # * +to+
-    # * +cc+
-    # * +bcc+
-    # * +reply-to+
-    # * +orig-date+
-    # * +message-id+
-    # * +references+
-    #
-    # Fields can only appear once in message headers while other fields such as
-    # <tt>X-Anything</tt> can appear multiple times.
-    #
-    # If you want to replace any header which already exists, first set it to
-    # +nil+ in order to reset the value otherwise another field will be added
-    # for the same header.
-    def headers(args = nil)
-      if args
-        @_message.headers(args)
-      else
-        @_message
-      end
-    end
-
     # The main method that creates the message and renders the message templates. There are
     # two ways to call this method, with a block, or without a block.
     #
-    # It accepts a headers hash. This hash allows you to specify
-    # the most used headers in an message message, these are:
+    # It accepts a option hash. This hash allows you to specify options used in an message,
+    # these are:
     #
-    # * +:subject+ - The subject of the message, if this is omitted, Action Texter will
-    #   ask the Rails I18n class for a translated +:subject+ in the scope of
-    #   <tt>[texter_scope, action_name]</tt> or if this is missing, will translate the
-    #   humanized version of the +action_name+
-    # * +:to+ - Who the message is destined for, can be a string of addresses, or an array
-    #   of addresses.
-    # * +:from+ - Who the message is from
-    # * +:cc+ - Who you would like to Carbon-Copy on this message, can be a string of addresses,
-    #   or an array of addresses.
-    # * +:bcc+ - Who you would like to Blind-Carbon-Copy on this message, can be a string of
-    #   addresses, or an array of addresses.
-    # * +:reply_to+ - Who to set the Reply-To header of the message to.
-    # * +:date+ - The date to say the message was sent on.
+    # * +:to+ - Who the message is destined for, can be a string of phone number, or an array
+    #   of numbers.
+    # * +:charset+ - The charset of the message.
     #
-    # You can set default values for any of the above headers (except +:date+)
-    # by using the ::default class method:
+    # You can set default values for any of the above options by using the ::default class method:
     #
     #  class Notifier < ActionTexter::Base
-    #    default from: 'no-reply@test.lindsaar.net',
-    #            bcc: 'message_logger@test.lindsaar.net',
-    #            reply_to: 'bounces@test.lindsaar.net'
+    #    default charset: 'UTF-8'
     #  end
     #
-    # If you need other headers not listed above, you can either pass them in
-    # as part of the headers hash or use the <tt>headers['name'] = value</tt>
-    # method.
-    #
-    # When a +:return_path+ is specified as header, that value will be used as
-    # the 'envelope from' address for the Text message. Setting this is useful
-    # when you want delivery notifications sent to a different address than the
-    # one in +:from+. Text will actually use the +:return_path+ in preference
-    # to the +:sender+ in preference to the +:from+ field for the 'envelope
-    # from' value.
-    #
-    # If you do not pass a block to the +text+ method, it will find all
-    # templates in the view paths using by default the texter name and the
-    # method name that it is being called from, it will then create parts for
-    # each of these templates intelligently, making educated guesses on correct
-    # content type and sequence, and return a fully prepared <tt>Text::Message</tt>
-    # ready to call <tt>:deliver</tt> on to send.
+    # It will find the .txt/.text template in the view paths using by default
+    # the texter name and the method name that it is being called from,
+    # it will then create body for the template intelligently, and return a fully
+    # prepared <tt>ActionTexter::Message</tt> ready to call <tt>:deliver</tt> on to send.
     #
     # For example:
     #
     #   class Notifier < ActionTexter::Base
-    #     default from: 'no-reply@test.lindsaar.net'
-    #
     #     def welcome
-    #       text(to: 'mikel@test.lindsaar.net')
+    #       text(to: '+886900000000')
     #     end
     #   end
     #
@@ -587,101 +374,35 @@ module ActionTexter
     #
     # And now it will look for all templates at "app/views/notifications" with name "another".
     #
-    # If you do pass a block, you can render specific templates of your choice:
-    #
-    #   text(to: 'mikel@test.lindsaar.net') do |format|
-    #     format.text
-    #     format.html
-    #   end
-    #
-    # You can even render plain text directly without using a template:
-    #
-    #   text(to: 'mikel@test.lindsaar.net') do |format|
-    #     format.text { render plain: "Hello Mikel!" }
-    #     format.html { render html: "<h1>Hello Mikel!</h1>".html_safe }
-    #   end
-    #
-    # Which will render a +multipart/alternative+ message with +text/plain+ and
-    # +text/html+ parts.
-    #
-    # The block syntax also allows you to customize the part headers if desired:
-    #
-    #   text(to: 'mikel@test.lindsaar.net') do |format|
-    #     format.text(content_transfer_encoding: "base64")
-    #     format.html
-    #   end
-    #
-    def text(headers = {}, &block)
-      return message if @_text_was_called && headers.blank? && !block
+    def text(options = {})
+      return message if @_text_was_called && options.blank?
 
-      # At the beginning, do not consider class default for content_type
-      content_type = headers[:content_type]
+      options = apply_defaults(options)
 
-      headers = apply_defaults(headers)
-
-      # Apply charset at the beginning so all fields are properly quoted
-      message.charset = charset = headers[:charset]
+      message.charset = options[:charset]
 
       # Set configure delivery behavior
-      wrap_delivery_behavior!(headers[:delivery_method], headers[:delivery_method_options])
+      wrap_delivery_behavior!(options[:delivery_method], options[:delivery_method_options])
 
-      assign_headers_to_message(message, headers)
+      message.to = options[:to]
 
-      # Render the templates and blocks
-      responses = collect_responses(headers, &block)
+      # Render the template
+      responses = response(options)
       @_text_was_called = true
-
-      create_parts_from_responses(message, responses)
-
-      # Setup content type, reapply charset and handle parts order
-      message.content_type = set_content_type(message, content_type, headers[:content_type])
-      message.charset      = charset
-
-      if message.multipart?
-        message.body.set_sort_order(headers[:parts_order])
-        message.body.sort_parts!
-      end
 
       message
     end
 
     protected
 
-    # Used by #text to set the content type of the message.
-    #
-    # It will use the given +user_content_type+.
-    #
-    # If there is no content type passed in via headers or the message is multipart,
-    # then the default content type is used.
-    def set_content_type(m, user_content_type, class_default)
-      params = m.content_type_parameters || {}
-      case
-      when user_content_type.present?
-        user_content_type
-      when m.multipart?
-        ["multipart", "alternative", params]
-      else
-        m.content_type || class_default
-      end
-    end
-
-    # Translates the +subject+ using Rails I18n class under <tt>[texter_scope, action_name]</tt> scope.
-    # If it does not find a translation for the +subject+ under the specified scope it will default to a
-    # humanized version of the <tt>action_name</tt>.
-    # If the subject has interpolations, you can pass them through the +interpolations+ parameter.
-    def default_i18n_subject(interpolations = {})
-      texter_scope = self.class.texter_name.tr('/', '.')
-      I18n.t(:subject, interpolations.merge(scope: [texter_scope, action_name], default: action_name.humanize))
-    end
-
-    # Etexts do not support relative path links.
+    # Text messages do not support relative path links.
     def self.supports_path?
       false
     end
 
     private
 
-    def apply_defaults(headers)
+    def apply_defaults(options)
       default_values = self.class.default.map do |key, value|
         [
           key,
@@ -689,66 +410,26 @@ module ActionTexter
         ]
       end.to_h
 
-      headers_with_defaults = headers.reverse_merge(default_values)
-      headers_with_defaults[:subject] ||= default_i18n_subject
-      headers_with_defaults
+      options.reverse_merge(default_values)
     end
 
-    def assign_headers_to_message(message, headers)
-      assignable = headers.except(:parts_order, :content_type, :body, :template_name,
-                                  :template_path, :delivery_method, :delivery_method_options)
-      assignable.each { |k, v| message[k] = v }
-    end
-
-    def collect_responses(headers)
-      if block_given?
-        collector = ActionTexter::Collector.new(lookup_context) { render(action_name) }
-        yield(collector)
-        collector.responses
-      elsif headers[:body]
-        [{
-          body: headers.delete(:body),
-          content_type: self.class.default[:content_type] || "text/plain"
-        }]
+    def response(optionss)
+      if options[:body]
+        options.delete(:body)
       else
-        collect_responses_from_templates(headers)
+        response_from_template(options)
       end
     end
 
-    def collect_responses_from_templates(headers)
-      templates_path = headers[:template_path] || self.class.texter_name
-      templates_name = headers[:template_name] || action_name
+    # Now we only support .text/.txt format for SMS
+    def response_from_template(options)
+      templates_path = options[:template_path] || self.class.texter_name
+      templates_name = options[:template_name] || action_name
 
-      each_template(Array(templates_path), templates_name).map do |template|
-        self.formats = template.formats
-        {
-          body: render(template: template),
-          content_type: template.type.to_s
-        }
-      end
-    end
+      templates_paths = Array(templates_path)
+      template = lookup_context.find(templates_name, templates_paths, nil, [], { formats: [:txt, :text] })
 
-    def each_template(paths, name, &block)
-      templates = lookup_context.find_all(name, paths)
-      if templates.empty?
-        raise ActionView::MissingTemplate.new(paths, name, paths, false, 'texter')
-      else
-        templates.uniq(&:formats).each(&block)
-      end
-    end
-
-    def create_parts_from_responses(m, responses)
-      if responses.size == 1
-        responses[0].each { |k,v| m[k] = v }
-      else
-        responses.each { |r| insert_part(m, r, m.charset) }
-      end
-    end
-
-    def insert_part(container, response, charset)
-      response[:charset] ||= charset
-      part = Text::Part.new(response)
-      container.add_part(part)
+      render(template: template)
     end
 
     # This and #instrument_name is for caching instrument
