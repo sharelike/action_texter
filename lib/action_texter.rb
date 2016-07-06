@@ -14,8 +14,6 @@ module ActionTexter
   autoload :Base
   autoload :DeliveryMethods
   autoload :TexterHelper
-  autoload :TestCase
-  autoload :TestHelper
   autoload :MessageDelivery
   autoload :DeliveryJob
 end

@@ -40,8 +40,6 @@ module ActionTexter
 
         options.each { |k,v| send("#{k}=", v) }
       end
-
-      ActiveSupport.on_load(:action_dispatch_integration_test) { include ActionTexter::TestCase::ClearTestDeliveries }
     end
 
     initializer "action_texter.compile_config_methods" do

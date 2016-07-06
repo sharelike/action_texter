@@ -17,7 +17,7 @@ module Rails
         end
       end
 
-      hook_for :template_engine, :test_framework
+      hook_for :template_engine
 
       protected
         def file_name
