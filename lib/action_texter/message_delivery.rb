@@ -4,14 +4,14 @@ module ActionTexter
   # The <tt>ActionTexter::MessageDelivery</tt> class is used by
   # <tt>ActionTexter::Base</tt> when creating a new texter.
   # <tt>MessageDelivery</tt> is a wrapper (+Delegator+ subclass) around a lazy
-  # created <tt>Text::Message</tt>. You can get direct access to the
-  # <tt>Text::Message</tt>, deliver the message or schedule the message to be sent
+  # created <tt>ActionTexter::Message</tt>. You can get direct access to the
+  # <tt>ActionTexter::Message</tt>, deliver the message or schedule the message to be sent
   # through Active Job.
   #
   #   Notifier.welcome(User.first)               # an ActionTexter::MessageDelivery object
   #   Notifier.welcome(User.first).deliver_now   # sends the message
   #   Notifier.welcome(User.first).deliver_later # enqueue message delivery as a job through Active Job
-  #   Notifier.welcome(User.first).message       # a Text::Message object
+  #   Notifier.welcome(User.first).message       # a ActionTexter::Message object
   class MessageDelivery < Delegator
     def initialize(texter_class, action, *args) #:nodoc:
       @texter_class, @action, @args = texter_class, action, args
@@ -19,27 +19,27 @@ module ActionTexter
       # The text is only processed if we try to call any methods on it.
       # Typical usage will leave it unloaded and call deliver_later.
       @processed_texter = nil
-      @text_message = nil
+      @message = nil
     end
 
-    # Method calls are delegated to the Text::Message that's ready to deliver.
+    # Method calls are delegated to the ActionTexter::Message that's ready to deliver.
     def __getobj__ #:nodoc:
-      @text_message ||= processed_texter.message
+      @message ||= processed_texter.message
     end
 
     # Unused except for delegator internals (dup, marshaling).
-    def __setobj__(text_message) #:nodoc:
-      @text_message = text_message
+    def __setobj__(message) #:nodoc:
+      @message = message
     end
 
-    # Returns the resulting Text::Message
+    # Returns the resulting ActionTexter::Message
     def message
       __getobj__
     end
 
     # Was the delegate loaded, causing the texter action to be processed?
     def processed?
-      @processed_texter || @text_message
+      @processed_texter || @message
     end
 
     # Enqueues the message to be delivered through Active Job. When the

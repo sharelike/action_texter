@@ -16,4 +16,5 @@ module ActionTexter
   autoload :TexterHelper
   autoload :MessageDelivery
   autoload :DeliveryJob
+  autoload :Message
 end

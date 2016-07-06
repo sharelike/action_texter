@@ -220,7 +220,6 @@ module ActionTexter
     include AbstractController::Logger
     include AbstractController::Helpers
     include AbstractController::Translation
-    include AbstractController::AssetPaths
     include AbstractController::Callbacks
     include AbstractController::Caching
 
