@@ -8,7 +8,7 @@ module ActionTexter
     def deliver(event)
       info do
         recipients = Array(event.payload[:to]).join(', ')
-        "Sent text to #{recipients} (#{event.duration.round(1)}ms)"
+        "Sent text message to #{recipients} (#{event.duration.round(1)}ms)"
       end
 
       debug { event.payload[:text] }
@@ -19,7 +19,7 @@ module ActionTexter
       debug do
         texter = event.payload[:texter]
         action = event.payload[:action]
-        "#{texter}##{action}: processed outbound text in #{event.duration.round(1)}ms"
+        "#{texter}##{action}: processed outbound text message in #{event.duration.round(1)}ms"
       end
     end
 
