@@ -17,10 +17,7 @@ module ActionTexter
 
   autoload :Base
   autoload :DeliveryMethods
-  autoload :InlinePreviewInterceptor
   autoload :TexterHelper
-  autoload :Preview
-  autoload :Previews, 'action_texter/preview'
   autoload :TestCase
   autoload :TestHelper
   autoload :MessageDelivery
