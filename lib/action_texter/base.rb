@@ -1,100 +1,100 @@
-require 'mail'
-require 'action_mailer/collector'
+require 'text'
+require 'action_texter/collector'
 require 'active_support/core_ext/string/inflections'
 require 'active_support/core_ext/hash/except'
 require 'active_support/core_ext/module/anonymous'
 
-require 'action_mailer/log_subscriber'
-require 'action_mailer/rescuable'
+require 'action_texter/log_subscriber'
+require 'action_texter/rescuable'
 
-module ActionMailer
-  # Action Mailer allows you to send email from your application using a mailer model and views.
+module ActionTexter
+  # Action Texter allows you to send message from your application using a texter model and views.
   #
-  # = Mailer Models
+  # = Texter Models
   #
-  # To use Action Mailer, you need to create a mailer model.
+  # To use Action Texter, you need to create a texter model.
   #
-  #   $ rails generate mailer Notifier
+  #   $ rails generate texter Notifier
   #
-  # The generated model inherits from <tt>ApplicationMailer</tt> which in turn
-  # inherits from <tt>ActionMailer::Base</tt>. A mailer model defines methods
-  # used to generate an email message. In these methods, you can setup variables to be used in
-  # the mailer views, options on the mail itself such as the <tt>:from</tt> address, and attachments.
+  # The generated model inherits from <tt>ApplicationTexter</tt> which in turn
+  # inherits from <tt>ActionTexter::Base</tt>. A texter model defines methods
+  # used to generate an message message. In these methods, you can setup variables to be used in
+  # the texter views, options on the text itself such as the <tt>:from</tt> address, and attachments.
   #
-  #   class ApplicationMailer < ActionMailer::Base
+  #   class ApplicationTexter < ActionTexter::Base
   #     default from: 'from@example.com'
-  #     layout 'mailer'
+  #     layout 'texter'
   #   end
   #
-  #   class NotifierMailer < ApplicationMailer
+  #   class NotifierTexter < ApplicationTexter
   #     default from: 'no-reply@example.com',
   #             return_path: 'system@example.com'
   #
   #     def welcome(recipient)
   #       @account = recipient
-  #       mail(to: recipient.email_address_with_name,
+  #       text(to: recipient.message_address_with_name,
   #            bcc: ["bcc@example.com", "Order Watcher <watcher@example.com>"])
   #     end
   #   end
   #
-  # Within the mailer method, you have access to the following methods:
+  # Within the texter method, you have access to the following methods:
   #
-  # * <tt>attachments[]=</tt> - Allows you to add attachments to your email in an intuitive
+  # * <tt>attachments[]=</tt> - Allows you to add attachments to your message in an intuitive
   #   manner; <tt>attachments['filename.png'] = File.read('path/to/filename.png')</tt>
   #
-  # * <tt>attachments.inline[]=</tt> - Allows you to add an inline attachment to your email
+  # * <tt>attachments.inline[]=</tt> - Allows you to add an inline attachment to your message
   #   in the same manner as <tt>attachments[]=</tt>
   #
-  # * <tt>headers[]=</tt> - Allows you to specify any header field in your email such
+  # * <tt>headers[]=</tt> - Allows you to specify any header field in your message such
   #   as <tt>headers['X-No-Spam'] = 'True'</tt>. Note that declaring a header multiple times
   #   will add many fields of the same name. Read #headers doc for more information.
   #
-  # * <tt>headers(hash)</tt> - Allows you to specify multiple headers in your email such
+  # * <tt>headers(hash)</tt> - Allows you to specify multiple headers in your message such
   #   as <tt>headers({'X-No-Spam' => 'True', 'In-Reply-To' => '1234@message.id'})</tt>
   #
-  # * <tt>mail</tt> - Allows you to specify email to be sent.
+  # * <tt>text</tt> - Allows you to specify message to be sent.
   #
-  # The hash passed to the mail method allows you to specify any header that a <tt>Mail::Message</tt>
-  # will accept (any valid email header including optional fields).
+  # The hash passed to the text method allows you to specify any header that a <tt>Text::Message</tt>
+  # will accept (any valid message header including optional fields).
   #
-  # The mail method, if not passed a block, will inspect your views and send all the views with
+  # The text method, if not passed a block, will inspect your views and send all the views with
   # the same name as the method, so the above action would send the +welcome.text.erb+ view
-  # file as well as the +welcome.html.erb+ view file in a +multipart/alternative+ email.
+  # file as well as the +welcome.html.erb+ view file in a +multipart/alternative+ message.
   #
   # If you want to explicitly render only certain templates, pass a block:
   #
-  #   mail(to: user.email) do |format|
+  #   text(to: user.message) do |format|
   #     format.text
   #     format.html
   #   end
   #
   # The block syntax is also useful in providing information specific to a part:
   #
-  #   mail(to: user.email) do |format|
+  #   text(to: user.message) do |format|
   #     format.text(content_transfer_encoding: "base64")
   #     format.html
   #   end
   #
   # Or even to render a special view:
   #
-  #   mail(to: user.email) do |format|
+  #   text(to: user.message) do |format|
   #     format.text
   #     format.html { render "some_other_template" }
   #   end
   #
-  # = Mailer views
+  # = Texter views
   #
-  # Like Action Controller, each mailer class has a corresponding view directory in which each
+  # Like Action Controller, each texter class has a corresponding view directory in which each
   # method of the class looks for a template with its name.
   #
-  # To define a template to be used with a mailer, create an <tt>.erb</tt> file with the same
-  # name as the method in your mailer model. For example, in the mailer defined above, the template at
-  # <tt>app/views/notifier_mailer/welcome.text.erb</tt> would be used to generate the email.
+  # To define a template to be used with a texter, create an <tt>.erb</tt> file with the same
+  # name as the method in your texter model. For example, in the texter defined above, the template at
+  # <tt>app/views/notifier_texter/welcome.text.erb</tt> would be used to generate the message.
   #
-  # Variables defined in the methods of your mailer model are accessible as instance variables in their
+  # Variables defined in the methods of your texter model are accessible as instance variables in their
   # corresponding view.
   #
-  # Emails by default are sent in plain text, so a sample view for our model example might look like this:
+  # Etexts by default are sent in plain text, so a sample view for our model example might look like this:
   #
   #   Hi <%= @account.name %>,
   #   Thanks for joining our service! Please check back often.
@@ -112,8 +112,8 @@ module ActionMailer
   #
   # = Generating URLs
   #
-  # URLs can be generated in mailer views using <tt>url_for</tt> or named routes. Unlike controllers from
-  # Action Pack, the mailer instance doesn't have any context about the incoming request, so you'll need
+  # URLs can be generated in texter views using <tt>url_for</tt> or named routes. Unlike controllers from
+  # Action Pack, the texter instance doesn't have any context about the incoming request, so you'll need
   # to provide all of the details needed to generate a URL.
   #
   # When using <tt>url_for</tt> you'll need to provide the <tt>:host</tt>, <tt>:controller</tt>, and <tt>:action</tt>:
@@ -125,44 +125,44 @@ module ActionMailer
   #   <%= users_url(host: "example.com") %>
   #
   # You should use the <tt>named_route_url</tt> style (which generates absolute URLs) and avoid using the
-  # <tt>named_route_path</tt> style (which generates relative URLs), since clients reading the mail will
+  # <tt>named_route_path</tt> style (which generates relative URLs), since clients reading the text will
   # have no concept of a current URL from which to determine a relative path.
   #
-  # It is also possible to set a default host that will be used in all mailers by setting the <tt>:host</tt>
+  # It is also possible to set a default host that will be used in all texters by setting the <tt>:host</tt>
   # option as a configuration option in <tt>config/application.rb</tt>:
   #
-  #   config.action_mailer.default_url_options = { host: "example.com" }
+  #   config.action_texter.default_url_options = { host: "example.com" }
   #
   # By default when <tt>config.force_ssl</tt> is true, URLs generated for hosts will use the HTTPS protocol.
   #
-  # = Sending mail
+  # = Sending text
   #
-  # Once a mailer action and template are defined, you can deliver your message or defer its creation and
+  # Once a texter action and template are defined, you can deliver your message or defer its creation and
   # delivery for later:
   #
-  #   NotifierMailer.welcome(User.first).deliver_now # sends the email
-  #   mail = NotifierMailer.welcome(User.first)      # => an ActionMailer::MessageDelivery object
-  #   mail.deliver_now                               # generates and sends the email now
+  #   NotifierTexter.welcome(User.first).deliver_now # sends the message
+  #   text = NotifierTexter.welcome(User.first)      # => an ActionTexter::MessageDelivery object
+  #   text.deliver_now                               # generates and sends the message now
   #
-  # The <tt>ActionMailer::MessageDelivery</tt> class is a wrapper around a delegate that will call
-  # your method to generate the mail. If you want direct access to the delegator, or <tt>Mail::Message</tt>,
-  # you can call the <tt>message</tt> method on the <tt>ActionMailer::MessageDelivery</tt> object.
+  # The <tt>ActionTexter::MessageDelivery</tt> class is a wrapper around a delegate that will call
+  # your method to generate the text. If you want direct access to the delegator, or <tt>Text::Message</tt>,
+  # you can call the <tt>message</tt> method on the <tt>ActionTexter::MessageDelivery</tt> object.
   #
-  #   NotifierMailer.welcome(User.first).message     # => a Mail::Message object
+  #   NotifierTexter.welcome(User.first).message     # => a Text::Message object
   #
-  # Action Mailer is nicely integrated with Active Job so you can generate and send emails in the background
+  # Action Texter is nicely integrated with Active Job so you can generate and send messages in the background
   # (example: outside of the request-response cycle, so the user doesn't have to wait on it):
   #
-  #   NotifierMailer.welcome(User.first).deliver_later # enqueue the email sending to Active Job
+  #   NotifierTexter.welcome(User.first).deliver_later # enqueue the message sending to Active Job
   #
   # Note that <tt>deliver_later</tt> will execute your method from the background job.
   #
-  # You never instantiate your mailer class. Rather, you just call the method you defined on the class itself.
+  # You never instantiate your texter class. Rather, you just call the method you defined on the class itself.
   # All instance methods are expected to return a message object to be sent.
   #
-  # = Multipart Emails
+  # = Multipart Etexts
   #
-  # Multipart messages can also be used implicitly because Action Mailer will automatically detect and use
+  # Multipart messages can also be used implicitly because Action Texter will automatically detect and use
   # multipart templates, where each template is named after the name of the action, followed by the content
   # type. Each such detected template will be added to the message, as a separate part.
   #
@@ -174,37 +174,37 @@ module ActionMailer
   #
   # Each would be rendered and added as a separate part to the message, with the corresponding content
   # type. The content type for the entire message is automatically set to <tt>multipart/alternative</tt>,
-  # which indicates that the email contains multiple different representations of the same email
-  # body. The same instance variables defined in the action are passed to all email templates.
+  # which indicates that the message contains multiple different representations of the same message
+  # body. The same instance variables defined in the action are passed to all message templates.
   #
-  # Implicit template rendering is not performed if any attachments or parts have been added to the email.
-  # This means that you'll have to manually add each part to the email and set the content type of the email
+  # Implicit template rendering is not performed if any attachments or parts have been added to the message.
+  # This means that you'll have to manually add each part to the message and set the content type of the message
   # to <tt>multipart/alternative</tt>.
   #
   # = Attachments
   #
-  # Sending attachment in emails is easy:
+  # Sending attachment in messages is easy:
   #
-  #   class NotifierMailer < ApplicationMailer
+  #   class NotifierTexter < ApplicationTexter
   #     def welcome(recipient)
   #       attachments['free_book.pdf'] = File.read('path/to/file.pdf')
-  #       mail(to: recipient, subject: "New account information")
+  #       text(to: recipient, subject: "New account information")
   #     end
   #   end
   #
   # Which will (if it had both a <tt>welcome.text.erb</tt> and <tt>welcome.html.erb</tt>
-  # template in the view directory), send a complete <tt>multipart/mixed</tt> email with two parts,
-  # the first part being a <tt>multipart/alternative</tt> with the text and HTML email parts inside,
+  # template in the view directory), send a complete <tt>multipart/mixed</tt> message with two parts,
+  # the first part being a <tt>multipart/alternative</tt> with the text and HTML message parts inside,
   # and the second being a <tt>application/pdf</tt> with a Base64 encoded copy of the file.pdf book
   # with the filename +free_book.pdf+.
   #
   # If you need to send attachments with no content, you need to create an empty view for it,
   # or add an empty body parameter like this:
   #
-  #     class NotifierMailer < ApplicationMailer
+  #     class NotifierTexter < ApplicationTexter
   #       def welcome(recipient)
   #         attachments['free_book.pdf'] = File.read('path/to/file.pdf')
-  #         mail(to: recipient, subject: "New account information", body: "")
+  #         text(to: recipient, subject: "New account information", body: "")
   #       end
   #     end
   #
@@ -213,10 +213,10 @@ module ActionMailer
   # You can also specify that a file should be displayed inline with other HTML. This is useful
   # if you want to display a corporate logo or a photo.
   #
-  #   class NotifierMailer < ApplicationMailer
+  #   class NotifierTexter < ApplicationTexter
   #     def welcome(recipient)
   #       attachments.inline['photo.png'] = File.read('path/to/photo.png')
-  #       mail(to: recipient, subject: "Here is what we look like")
+  #       text(to: recipient, subject: "Here is what we look like")
   #     end
   #   end
   #
@@ -234,51 +234,51 @@ module ActionMailer
   #
   #   <%= image_tag attachments['photo.png'].url, alt: 'Our Photo', class: 'photo' -%>
   #
-  # = Observing and Intercepting Mails
+  # = Observing and Intercepting Texts
   #
-  # Action Mailer provides hooks into the Mail observer and interceptor methods. These allow you to
-  # register classes that are called during the mail delivery life cycle.
+  # Action Texter provides hooks into the Text observer and interceptor methods. These allow you to
+  # register classes that are called during the text delivery life cycle.
   #
-  # An observer class must implement the <tt>:delivered_email(message)</tt> method which will be
-  # called once for every email sent after the email has been sent.
+  # An observer class must implement the <tt>:delivered_message(message)</tt> method which will be
+  # called once for every message sent after the message has been sent.
   #
-  # An interceptor class must implement the <tt>:delivering_email(message)</tt> method which will be
-  # called before the email is sent, allowing you to make modifications to the email before it hits
+  # An interceptor class must implement the <tt>:delivering_message(message)</tt> method which will be
+  # called before the message is sent, allowing you to make modifications to the message before it hits
   # the delivery agents. Your class should make any needed modifications directly to the passed
-  # in <tt>Mail::Message</tt> instance.
+  # in <tt>Text::Message</tt> instance.
   #
   # = Default Hash
   #
-  # Action Mailer provides some intelligent defaults for your emails, these are usually specified in a
+  # Action Texter provides some intelligent defaults for your messages, these are usually specified in a
   # default method inside the class definition:
   #
-  #   class NotifierMailer < ApplicationMailer
+  #   class NotifierTexter < ApplicationTexter
   #     default sender: 'system@example.com'
   #   end
   #
-  # You can pass in any header value that a <tt>Mail::Message</tt> accepts. Out of the box,
-  # <tt>ActionMailer::Base</tt> sets the following:
+  # You can pass in any header value that a <tt>Text::Message</tt> accepts. Out of the box,
+  # <tt>ActionTexter::Base</tt> sets the following:
   #
   # * <tt>mime_version: "1.0"</tt>
   # * <tt>charset:      "UTF-8"</tt>
   # * <tt>content_type: "text/plain"</tt>
   # * <tt>parts_order:  [ "text/plain", "text/enriched", "text/html" ]</tt>
   #
-  # <tt>parts_order</tt> and <tt>charset</tt> are not actually valid <tt>Mail::Message</tt> header fields,
-  # but Action Mailer translates them appropriately and sets the correct values.
+  # <tt>parts_order</tt> and <tt>charset</tt> are not actually valid <tt>Text::Message</tt> header fields,
+  # but Action Texter translates them appropriately and sets the correct values.
   #
   # As you can pass in any header, you need to either quote the header as a string, or pass it in as
   # an underscored symbol, so the following will work:
   #
-  #   class NotifierMailer < ApplicationMailer
+  #   class NotifierTexter < ApplicationTexter
   #     default 'Content-Transfer-Encoding' => '7bit',
   #             content_description: 'This is a description'
   #   end
   #
-  # Finally, Action Mailer also supports passing <tt>Proc</tt> objects into the default hash, so you
+  # Finally, Action Texter also supports passing <tt>Proc</tt> objects into the default hash, so you
   # can define methods that evaluate as the message is being generated:
   #
-  #   class NotifierMailer < ApplicationMailer
+  #   class NotifierTexter < ApplicationTexter
   #     default 'X-Special-Header' => Proc.new { my_method }
   #
   #     private
@@ -288,26 +288,26 @@ module ActionMailer
   #       end
   #   end
   #
-  # Note that the proc is evaluated right at the start of the mail message generation, so if you
+  # Note that the proc is evaluated right at the start of the text message generation, so if you
   # set something in the default hash using a proc, and then set the same thing inside of your
-  # mailer method, it will get overwritten by the mailer method.
+  # texter method, it will get overwritten by the texter method.
   #
-  # It is also possible to set these default options that will be used in all mailers through
+  # It is also possible to set these default options that will be used in all texters through
   # the <tt>default_options=</tt> configuration in <tt>config/application.rb</tt>:
   #
-  #    config.action_mailer.default_options = { from: "no-reply@example.org" }
+  #    config.action_texter.default_options = { from: "no-reply@example.org" }
   #
   # = Callbacks
   #
   # You can specify callbacks using before_action and after_action for configuring your messages.
   # This may be useful, for example, when you want to add default inline attachments for all
-  # messages sent out by a certain mailer class:
+  # messages sent out by a certain texter class:
   #
-  #   class NotifierMailer < ApplicationMailer
+  #   class NotifierTexter < ApplicationTexter
   #     before_action :add_inline_attachment!
   #
   #     def welcome
-  #       mail
+  #       text
   #     end
   #
   #     private
@@ -317,71 +317,71 @@ module ActionMailer
   #       end
   #   end
   #
-  # Callbacks in Action Mailer are implemented using
+  # Callbacks in Action Texter are implemented using
   # <tt>AbstractController::Callbacks</tt>, so you can define and configure
   # callbacks in the same manner that you would use callbacks in classes that
   # inherit from <tt>ActionController::Base</tt>.
   #
   # Note that unless you have a specific reason to do so, you should prefer
   # using <tt>before_action</tt> rather than <tt>after_action</tt> in your
-  # Action Mailer classes so that headers are parsed properly.
+  # Action Texter classes so that headers are parsed properly.
   #
-  # = Previewing emails
+  # = Previewing messages
   #
-  # You can preview your email templates visually by adding a mailer preview file to the
-  # <tt>ActionMailer::Base.preview_path</tt>. Since most emails do something interesting
+  # You can preview your message templates visually by adding a texter preview file to the
+  # <tt>ActionTexter::Base.preview_path</tt>. Since most messages do something interesting
   # with database data, you'll need to write some scenarios to load messages with fake data:
   #
-  #   class NotifierMailerPreview < ActionMailer::Preview
+  #   class NotifierTexterPreview < ActionTexter::Preview
   #     def welcome
-  #       NotifierMailer.welcome(User.first)
+  #       NotifierTexter.welcome(User.first)
   #     end
   #   end
   #
-  # Methods must return a <tt>Mail::Message</tt> object which can be generated by calling the mailer
+  # Methods must return a <tt>Text::Message</tt> object which can be generated by calling the texter
   # method without the additional <tt>deliver_now</tt> / <tt>deliver_later</tt>. The location of the
-  # mailer previews directory can be configured using the <tt>preview_path</tt> option which has a default
-  # of <tt>test/mailers/previews</tt>:
+  # texter previews directory can be configured using the <tt>preview_path</tt> option which has a default
+  # of <tt>test/texters/previews</tt>:
   #
-  #   config.action_mailer.preview_path = "#{Rails.root}/lib/mailer_previews"
+  #   config.action_texter.preview_path = "#{Rails.root}/lib/texter_previews"
   #
-  # An overview of all previews is accessible at <tt>http://localhost:3000/rails/mailers</tt>
+  # An overview of all previews is accessible at <tt>http://localhost:3000/rails/texters</tt>
   # on a running development server instance.
   #
   # Previews can also be intercepted in a similar manner as deliveries can be by registering
-  # a preview interceptor that has a <tt>previewing_email</tt> method:
+  # a preview interceptor that has a <tt>previewing_message</tt> method:
   #
   #   class CssInlineStyler
-  #     def self.previewing_email(message)
+  #     def self.previewing_message(message)
   #       # inline CSS styles
   #     end
   #   end
   #
-  #   config.action_mailer.preview_interceptors :css_inline_styler
+  #   config.action_texter.preview_interceptors :css_inline_styler
   #
   # Note that interceptors need to be registered both with <tt>register_interceptor</tt>
   # and <tt>register_preview_interceptor</tt> if they should operate on both sending and
-  # previewing emails.
+  # previewing messages.
   #
   # = Configuration options
   #
   # These options are specified on the class level, like
-  # <tt>ActionMailer::Base.raise_delivery_errors = true</tt>
+  # <tt>ActionTexter::Base.raise_delivery_errors = true</tt>
   #
   # * <tt>default_options</tt> - You can pass this in at a class level as well as within the class itself as
   #   per the above section.
   #
-  # * <tt>logger</tt> - the logger is used for generating information on the mailing run if available.
+  # * <tt>logger</tt> - the logger is used for generating information on the texting run if available.
   #   Can be set to +nil+ for no logging. Compatible with both Ruby's own +Logger+ and Log4r loggers.
   #
   # * <tt>smtp_settings</tt> - Allows detailed configuration for <tt>:smtp</tt> delivery method:
-  #   * <tt>:address</tt> - Allows you to use a remote mail server. Just change it from its default
+  #   * <tt>:address</tt> - Allows you to use a remote text server. Just change it from its default
   #     "localhost" setting.
-  #   * <tt>:port</tt> - On the off chance that your mail server doesn't run on port 25, you can change it.
+  #   * <tt>:port</tt> - On the off chance that your text server doesn't run on port 25, you can change it.
   #   * <tt>:domain</tt> - If you need to specify a HELO domain, you can do it here.
-  #   * <tt>:user_name</tt> - If your mail server requires authentication, set the username in this setting.
-  #   * <tt>:password</tt> - If your mail server requires authentication, set the password in this setting.
-  #   * <tt>:authentication</tt> - If your mail server requires authentication, you need to specify the
+  #   * <tt>:user_name</tt> - If your text server requires authentication, set the username in this setting.
+  #   * <tt>:password</tt> - If your text server requires authentication, set the password in this setting.
+  #   * <tt>:authentication</tt> - If your text server requires authentication, you need to specify the
   #     authentication type here.
   #     This is a symbol and one of <tt>:plain</tt> (will send the password Base64 encoded), <tt>:login</tt> (will
   #     send the password Base64 encoded) or <tt>:cram_md5</tt> (combines a Challenge/Response mechanism to exchange
@@ -394,27 +394,27 @@ module ActionMailer
   #     <tt>'fail_if_no_peer_cert'</tt>) or directly the constant (<tt>OpenSSL::SSL::VERIFY_NONE</tt>,
   #     <tt>OpenSSL::SSL::VERIFY_PEER</tt>, ...).
   #
-  # * <tt>sendmail_settings</tt> - Allows you to override options for the <tt>:sendmail</tt> delivery method.
-  #   * <tt>:location</tt> - The location of the sendmail executable. Defaults to <tt>/usr/sbin/sendmail</tt>.
+  # * <tt>sendtext_settings</tt> - Allows you to override options for the <tt>:sendtext</tt> delivery method.
+  #   * <tt>:location</tt> - The location of the sendtext executable. Defaults to <tt>/usr/sbin/sendtext</tt>.
   #   * <tt>:arguments</tt> - The command line arguments. Defaults to <tt>-i -t</tt> with <tt>-f sender@address</tt>
   #     added automatically before the message is sent.
   #
   # * <tt>file_settings</tt> - Allows you to override options for the <tt>:file</tt> delivery method.
-  #   * <tt>:location</tt> - The directory into which emails will be written. Defaults to the application
-  #     <tt>tmp/mails</tt>.
+  #   * <tt>:location</tt> - The directory into which messages will be written. Defaults to the application
+  #     <tt>tmp/texts</tt>.
   #
-  # * <tt>raise_delivery_errors</tt> - Whether or not errors should be raised if the email fails to be delivered.
+  # * <tt>raise_delivery_errors</tt> - Whether or not errors should be raised if the message fails to be delivered.
   #
   # * <tt>delivery_method</tt> - Defines a delivery method. Possible values are <tt>:smtp</tt> (default),
-  #   <tt>:sendmail</tt>, <tt>:test</tt>, and <tt>:file</tt>. Or you may provide a custom delivery method
-  #   object e.g. +MyOwnDeliveryMethodClass+. See the Mail gem documentation on the interface you need to
+  #   <tt>:sendtext</tt>, <tt>:test</tt>, and <tt>:file</tt>. Or you may provide a custom delivery method
+  #   object e.g. +MyOwnDeliveryMethodClass+. See the Text gem documentation on the interface you need to
   #   implement for a custom delivery agent.
   #
-  # * <tt>perform_deliveries</tt> - Determines whether emails are actually sent from Action Mailer when you
-  #   call <tt>.deliver</tt> on an email message or on an Action Mailer method. This is on by default but can
+  # * <tt>perform_deliveries</tt> - Determines whether messages are actually sent from Action Texter when you
+  #   call <tt>.deliver</tt> on an message message or on an Action Texter method. This is on by default but can
   #   be turned off to aid in functional testing.
   #
-  # * <tt>deliveries</tt> - Keeps an array of all the emails sent out through the Action Mailer with
+  # * <tt>deliveries</tt> - Keeps an array of all the messages sent out through the Action Texter with
   #   <tt>delivery_method :test</tt>. Most useful for unit and functional testing.
   #
   # * <tt>deliver_later_queue_name</tt> - The name of the queue used with <tt>deliver_later</tt>.
@@ -442,7 +442,7 @@ module ActionMailer
       PROTECTED_IVARS
     end
 
-    helper ActionMailer::MailHelper
+    helper ActionTexter::TexterHelper
 
     class_attribute :default_params
     self.default_params = {
@@ -453,28 +453,28 @@ module ActionMailer
     }.freeze
 
     class << self
-      # Register one or more Observers which will be notified when mail is delivered.
+      # Register one or more Observers which will be notified when text is delivered.
       def register_observers(*observers)
         observers.flatten.compact.each { |observer| register_observer(observer) }
       end
 
-      # Register one or more Interceptors which will be called before mail is sent.
+      # Register one or more Interceptors which will be called before text is sent.
       def register_interceptors(*interceptors)
         interceptors.flatten.compact.each { |interceptor| register_interceptor(interceptor) }
       end
 
-      # Register an Observer which will be notified when mail is delivered.
+      # Register an Observer which will be notified when text is delivered.
       # Either a class, string or symbol can be passed in as the Observer.
       # If a string or symbol is passed in it will be camelized and constantized.
       def register_observer(observer)
-        Mail.register_observer(observer_class_for(observer))
+        Text.register_observer(observer_class_for(observer))
       end
 
-      # Register an Interceptor which will be called before mail is sent.
+      # Register an Interceptor which will be called before text is sent.
       # Either a class, string or symbol can be passed in as the Interceptor.
       # If a string or symbol is passed in it will be camelized and constantized.
       def register_interceptor(interceptor)
-        Mail.register_interceptor(observer_class_for(interceptor))
+        Text.register_interceptor(observer_class_for(interceptor))
       end
 
       def observer_class_for(value) # :nodoc:
@@ -487,18 +487,18 @@ module ActionMailer
       end
       private :observer_class_for
 
-      # Returns the name of current mailer. This method is also being used as a path for a view lookup.
-      # If this is an anonymous mailer, this method will return +anonymous+ instead.
-      def mailer_name
-        @mailer_name ||= anonymous? ? "anonymous" : name.underscore
+      # Returns the name of current texter. This method is also being used as a path for a view lookup.
+      # If this is an anonymous texter, this method will return +anonymous+ instead.
+      def texter_name
+        @texter_name ||= anonymous? ? "anonymous" : name.underscore
       end
-      # Allows to set the name of current mailer.
-      attr_writer :mailer_name
-      alias :controller_path :mailer_name
+      # Allows to set the name of current texter.
+      attr_writer :texter_name
+      alias :controller_path :texter_name
 
       # Sets the defaults through app configuration:
       #
-      #     config.action_mailer.default(from: "no-reply@example.org")
+      #     config.action_texter.default(from: "no-reply@example.org")
       #
       # Aliased by ::default_options=
       def default(value = nil)
@@ -507,55 +507,55 @@ module ActionMailer
       end
       # Allows to set defaults through app configuration:
       #
-      #    config.action_mailer.default_options = { from: "no-reply@example.org" }
+      #    config.action_texter.default_options = { from: "no-reply@example.org" }
       alias :default_options= :default
 
-      # Receives a raw email, parses it into an email object, decodes it,
-      # instantiates a new mailer, and passes the email object to the mailer
+      # Receives a raw message, parses it into an message object, decodes it,
+      # instantiates a new texter, and passes the message object to the texter
       # object's +receive+ method.
       #
-      # If you want your mailer to be able to process incoming messages, you'll
-      # need to implement a +receive+ method that accepts the raw email string
+      # If you want your texter to be able to process incoming messages, you'll
+      # need to implement a +receive+ method that accepts the raw message string
       # as a parameter:
       #
-      #   class MyMailer < ActionMailer::Base
-      #     def receive(mail)
+      #   class MyTexter < ActionTexter::Base
+      #     def receive(text)
       #       # ...
       #     end
       #   end
-      def receive(raw_mail)
-        ActiveSupport::Notifications.instrument("receive.action_mailer") do |payload|
-          mail = Mail.new(raw_mail)
-          set_payload_for_mail(payload, mail)
-          new.receive(mail)
+      def receive(raw_text)
+        ActiveSupport::Notifications.instrument("receive.action_texter") do |payload|
+          text = Text.new(raw_text)
+          set_payload_for_text(payload, text)
+          new.receive(text)
         end
       end
 
-      # Wraps an email delivery inside of <tt>ActiveSupport::Notifications</tt> instrumentation.
+      # Wraps an message delivery inside of <tt>ActiveSupport::Notifications</tt> instrumentation.
       #
-      # This method is actually called by the <tt>Mail::Message</tt> object itself
-      # through a callback when you call <tt>:deliver</tt> on the <tt>Mail::Message</tt>,
-      # calling +deliver_mail+ directly and passing a <tt>Mail::Message</tt> will do
-      # nothing except tell the logger you sent the email.
-      def deliver_mail(mail) #:nodoc:
-        ActiveSupport::Notifications.instrument("deliver.action_mailer") do |payload|
-          set_payload_for_mail(payload, mail)
-          yield # Let Mail do the delivery actions
+      # This method is actually called by the <tt>Text::Message</tt> object itself
+      # through a callback when you call <tt>:deliver</tt> on the <tt>Text::Message</tt>,
+      # calling +deliver_text+ directly and passing a <tt>Text::Message</tt> will do
+      # nothing except tell the logger you sent the message.
+      def deliver_text(text) #:nodoc:
+        ActiveSupport::Notifications.instrument("deliver.action_texter") do |payload|
+          set_payload_for_text(payload, text)
+          yield # Let Text do the delivery actions
         end
       end
 
     protected
 
-      def set_payload_for_mail(payload, mail) #:nodoc:
-        payload[:mailer]     = name
-        payload[:message_id] = mail.message_id
-        payload[:subject]    = mail.subject
-        payload[:to]         = mail.to
-        payload[:from]       = mail.from
-        payload[:bcc]        = mail.bcc if mail.bcc.present?
-        payload[:cc]         = mail.cc  if mail.cc.present?
-        payload[:date]       = mail.date
-        payload[:mail]       = mail.encoded
+      def set_payload_for_text(payload, text) #:nodoc:
+        payload[:texter]     = name
+        payload[:message_id] = text.message_id
+        payload[:subject]    = text.subject
+        payload[:to]         = text.to
+        payload[:from]       = text.from
+        payload[:bcc]        = text.bcc if text.bcc.present?
+        payload[:cc]         = text.cc  if text.cc.present?
+        payload[:date]       = text.date
+        payload[:text]       = text.encoded
       end
 
       def method_missing(method_name, *args) # :nodoc:
@@ -575,29 +575,29 @@ module ActionMailer
 
     attr_internal :message
 
-    # Instantiate a new mailer object. If +method_name+ is not +nil+, the mailer
-    # will be initialized according to the named method. If not, the mailer will
+    # Instantiate a new texter object. If +method_name+ is not +nil+, the texter
+    # will be initialized according to the named method. If not, the texter will
     # remain uninitialized (useful when you only need to invoke the "receive"
     # method, for instance).
     def initialize
       super()
-      @_mail_was_called = false
-      @_message = Mail.new
+      @_text_was_called = false
+      @_message = Text.new
     end
 
     def process(method_name, *args) #:nodoc:
       payload = {
-        mailer: self.class.name,
+        texter: self.class.name,
         action: method_name
       }
 
-      ActiveSupport::Notifications.instrument("process.action_mailer", payload) do
+      ActiveSupport::Notifications.instrument("process.action_texter", payload) do
         super
-        @_message = NullMail.new unless @_mail_was_called
+        @_message = NullText.new unless @_text_was_called
       end
     end
 
-    class NullMail #:nodoc:
+    class NullText #:nodoc:
       def body; '' end
       def header; {} end
 
@@ -610,23 +610,23 @@ module ActionMailer
       end
     end
 
-    # Returns the name of the mailer object.
-    def mailer_name
-      self.class.mailer_name
+    # Returns the name of the texter object.
+    def texter_name
+      self.class.texter_name
     end
 
-    # Allows you to pass random and unusual headers to the new <tt>Mail::Message</tt>
+    # Allows you to pass random and unusual headers to the new <tt>Text::Message</tt>
     # object which will add them to itself.
     #
     #   headers['X-Special-Domain-Specific-Header'] = "SecretValue"
     #
     # You can also pass a hash into headers of header field names and values,
-    # which will then be set on the <tt>Mail::Message</tt> object:
+    # which will then be set on the <tt>Text::Message</tt> object:
     #
     #   headers 'X-Special-Domain-Specific-Header' => "SecretValue",
     #           'In-Reply-To' => incoming.message_id
     #
-    # The resulting <tt>Mail::Message</tt> will have the following in its header:
+    # The resulting <tt>Text::Message</tt> will have the following in its header:
     #
     #   X-Special-Domain-Specific-Header: SecretValue
     #
@@ -643,7 +643,7 @@ module ActionMailer
     # * +message-id+
     # * +references+
     #
-    # Fields can only appear once in email headers while other fields such as
+    # Fields can only appear once in message headers while other fields such as
     # <tt>X-Anything</tt> can appear multiple times.
     #
     # If you want to replace any header which already exists, first set it to
@@ -657,38 +657,38 @@ module ActionMailer
       end
     end
 
-    # Allows you to add attachments to an email, like so:
+    # Allows you to add attachments to an message, like so:
     #
-    #  mail.attachments['filename.jpg'] = File.read('/path/to/filename.jpg')
+    #  text.attachments['filename.jpg'] = File.read('/path/to/filename.jpg')
     #
-    # If you do this, then Mail will take the file name and work out the mime type.
+    # If you do this, then Text will take the file name and work out the mime type.
     # It will also set the Content-Type, Content-Disposition, Content-Transfer-Encoding
     # and encode the contents of the attachment in Base64.
     #
     # You can also specify overrides if you want by passing a hash instead of a string:
     #
-    #  mail.attachments['filename.jpg'] = {mime_type: 'application/gzip',
+    #  text.attachments['filename.jpg'] = {mime_type: 'application/gzip',
     #                                      content: File.read('/path/to/filename.jpg')}
     #
     # If you want to use encoding other than Base64 then you will need to pass encoding
-    # type along with the pre-encoded content as Mail doesn't know how to decode the
+    # type along with the pre-encoded content as Text doesn't know how to decode the
     # data:
     #
     #  file_content = SpecialEncode(File.read('/path/to/filename.jpg'))
-    #  mail.attachments['filename.jpg'] = {mime_type: 'application/gzip',
+    #  text.attachments['filename.jpg'] = {mime_type: 'application/gzip',
     #                                      encoding: 'SpecialEncoding',
     #                                      content: file_content }
     #
     # You can also search for specific attachments:
     #
     #  # By Filename
-    #  mail.attachments['filename.jpg']   # => Mail::Part object or nil
+    #  text.attachments['filename.jpg']   # => Text::Part object or nil
     #
     #  # or by index
-    #  mail.attachments[0]                # => Mail::Part (first attachment)
+    #  text.attachments[0]                # => Text::Part (first attachment)
     #
     def attachments
-      if @_mail_was_called
+      if @_text_was_called
         LateAttachmentsProxy.new(@_message.attachments)
       else
         @_message.attachments
@@ -701,37 +701,37 @@ module ActionMailer
 
       private
         def _raise_error
-          raise RuntimeError, "Can't add attachments after `mail` was called.\n" \
-                              "Make sure to use `attachments[]=` before calling `mail`."
+          raise RuntimeError, "Can't add attachments after `text` was called.\n" \
+                              "Make sure to use `attachments[]=` before calling `text`."
         end
     end
 
-    # The main method that creates the message and renders the email templates. There are
+    # The main method that creates the message and renders the message templates. There are
     # two ways to call this method, with a block, or without a block.
     #
     # It accepts a headers hash. This hash allows you to specify
-    # the most used headers in an email message, these are:
+    # the most used headers in an message message, these are:
     #
-    # * +:subject+ - The subject of the message, if this is omitted, Action Mailer will
+    # * +:subject+ - The subject of the message, if this is omitted, Action Texter will
     #   ask the Rails I18n class for a translated +:subject+ in the scope of
-    #   <tt>[mailer_scope, action_name]</tt> or if this is missing, will translate the
+    #   <tt>[texter_scope, action_name]</tt> or if this is missing, will translate the
     #   humanized version of the +action_name+
     # * +:to+ - Who the message is destined for, can be a string of addresses, or an array
     #   of addresses.
     # * +:from+ - Who the message is from
-    # * +:cc+ - Who you would like to Carbon-Copy on this email, can be a string of addresses,
+    # * +:cc+ - Who you would like to Carbon-Copy on this message, can be a string of addresses,
     #   or an array of addresses.
-    # * +:bcc+ - Who you would like to Blind-Carbon-Copy on this email, can be a string of
+    # * +:bcc+ - Who you would like to Blind-Carbon-Copy on this message, can be a string of
     #   addresses, or an array of addresses.
-    # * +:reply_to+ - Who to set the Reply-To header of the email to.
-    # * +:date+ - The date to say the email was sent on.
+    # * +:reply_to+ - Who to set the Reply-To header of the message to.
+    # * +:date+ - The date to say the message was sent on.
     #
     # You can set default values for any of the above headers (except +:date+)
     # by using the ::default class method:
     #
-    #  class Notifier < ActionMailer::Base
+    #  class Notifier < ActionTexter::Base
     #    default from: 'no-reply@test.lindsaar.net',
-    #            bcc: 'email_logger@test.lindsaar.net',
+    #            bcc: 'message_logger@test.lindsaar.net',
     #            reply_to: 'bounces@test.lindsaar.net'
     #  end
     #
@@ -740,26 +740,26 @@ module ActionMailer
     # method.
     #
     # When a +:return_path+ is specified as header, that value will be used as
-    # the 'envelope from' address for the Mail message. Setting this is useful
+    # the 'envelope from' address for the Text message. Setting this is useful
     # when you want delivery notifications sent to a different address than the
-    # one in +:from+. Mail will actually use the +:return_path+ in preference
+    # one in +:from+. Text will actually use the +:return_path+ in preference
     # to the +:sender+ in preference to the +:from+ field for the 'envelope
     # from' value.
     #
-    # If you do not pass a block to the +mail+ method, it will find all
-    # templates in the view paths using by default the mailer name and the
+    # If you do not pass a block to the +text+ method, it will find all
+    # templates in the view paths using by default the texter name and the
     # method name that it is being called from, it will then create parts for
     # each of these templates intelligently, making educated guesses on correct
-    # content type and sequence, and return a fully prepared <tt>Mail::Message</tt>
+    # content type and sequence, and return a fully prepared <tt>Text::Message</tt>
     # ready to call <tt>:deliver</tt> on to send.
     #
     # For example:
     #
-    #   class Notifier < ActionMailer::Base
+    #   class Notifier < ActionTexter::Base
     #     default from: 'no-reply@test.lindsaar.net'
     #
     #     def welcome
-    #       mail(to: 'mikel@test.lindsaar.net')
+    #       text(to: 'mikel@test.lindsaar.net')
     #     end
     #   end
     #
@@ -768,36 +768,36 @@ module ActionMailer
     #
     # However, those can be customized:
     #
-    #   mail(template_path: 'notifications', template_name: 'another')
+    #   text(template_path: 'notifications', template_name: 'another')
     #
     # And now it will look for all templates at "app/views/notifications" with name "another".
     #
     # If you do pass a block, you can render specific templates of your choice:
     #
-    #   mail(to: 'mikel@test.lindsaar.net') do |format|
+    #   text(to: 'mikel@test.lindsaar.net') do |format|
     #     format.text
     #     format.html
     #   end
     #
     # You can even render plain text directly without using a template:
     #
-    #   mail(to: 'mikel@test.lindsaar.net') do |format|
+    #   text(to: 'mikel@test.lindsaar.net') do |format|
     #     format.text { render plain: "Hello Mikel!" }
     #     format.html { render html: "<h1>Hello Mikel!</h1>".html_safe }
     #   end
     #
-    # Which will render a +multipart/alternative+ email with +text/plain+ and
+    # Which will render a +multipart/alternative+ message with +text/plain+ and
     # +text/html+ parts.
     #
     # The block syntax also allows you to customize the part headers if desired:
     #
-    #   mail(to: 'mikel@test.lindsaar.net') do |format|
+    #   text(to: 'mikel@test.lindsaar.net') do |format|
     #     format.text(content_transfer_encoding: "base64")
     #     format.html
     #   end
     #
-    def mail(headers = {}, &block)
-      return message if @_mail_was_called && headers.blank? && !block
+    def text(headers = {}, &block)
+      return message if @_text_was_called && headers.blank? && !block
 
       # At the beginning, do not consider class default for content_type
       content_type = headers[:content_type]
@@ -814,7 +814,7 @@ module ActionMailer
 
       # Render the templates and blocks
       responses = collect_responses(headers, &block)
-      @_mail_was_called = true
+      @_text_was_called = true
 
       create_parts_from_responses(message, responses)
 
@@ -832,9 +832,9 @@ module ActionMailer
 
     protected
 
-    # Used by #mail to set the content type of the message.
+    # Used by #text to set the content type of the message.
     #
-    # It will use the given +user_content_type+, or multipart if the mail
+    # It will use the given +user_content_type+, or multipart if the text
     # message has any attachments. If the attachments are inline, the content
     # type will be "multipart/related", otherwise "multipart/mixed".
     #
@@ -859,16 +859,16 @@ module ActionMailer
       end
     end
 
-    # Translates the +subject+ using Rails I18n class under <tt>[mailer_scope, action_name]</tt> scope.
+    # Translates the +subject+ using Rails I18n class under <tt>[texter_scope, action_name]</tt> scope.
     # If it does not find a translation for the +subject+ under the specified scope it will default to a
     # humanized version of the <tt>action_name</tt>.
     # If the subject has interpolations, you can pass them through the +interpolations+ parameter.
     def default_i18n_subject(interpolations = {})
-      mailer_scope = self.class.mailer_name.tr('/', '.')
-      I18n.t(:subject, interpolations.merge(scope: [mailer_scope, action_name], default: action_name.humanize))
+      texter_scope = self.class.texter_name.tr('/', '.')
+      I18n.t(:subject, interpolations.merge(scope: [texter_scope, action_name], default: action_name.humanize))
     end
 
-    # Emails do not support relative path links.
+    # Etexts do not support relative path links.
     def self.supports_path?
       false
     end
@@ -896,7 +896,7 @@ module ActionMailer
 
     def collect_responses(headers)
       if block_given?
-        collector = ActionMailer::Collector.new(lookup_context) { render(action_name) }
+        collector = ActionTexter::Collector.new(lookup_context) { render(action_name) }
         yield(collector)
         collector.responses
       elsif headers[:body]
@@ -910,7 +910,7 @@ module ActionMailer
     end
 
     def collect_responses_from_templates(headers)
-      templates_path = headers[:template_path] || self.class.mailer_name
+      templates_path = headers[:template_path] || self.class.texter_name
       templates_name = headers[:template_name] || action_name
 
       each_template(Array(templates_path), templates_name).map do |template|
@@ -925,7 +925,7 @@ module ActionMailer
     def each_template(paths, name, &block)
       templates = lookup_context.find_all(name, paths)
       if templates.empty?
-        raise ActionView::MissingTemplate.new(paths, name, paths, false, 'mailer')
+        raise ActionView::MissingTemplate.new(paths, name, paths, false, 'texter')
       else
         templates.uniq(&:formats).each(&block)
       end
@@ -935,7 +935,7 @@ module ActionMailer
       if responses.size == 1 && !m.has_attachments?
         responses[0].each { |k,v| m[k] = v }
       elsif responses.size > 1 && m.has_attachments?
-        container = Mail::Part.new
+        container = Text::Part.new
         container.content_type = "multipart/alternative"
         responses.each { |r| insert_part(container, r, m.charset) }
         m.add_part(container)
@@ -946,22 +946,22 @@ module ActionMailer
 
     def insert_part(container, response, charset)
       response[:charset] ||= charset
-      part = Mail::Part.new(response)
+      part = Text::Part.new(response)
       container.add_part(part)
     end
 
     # This and #instrument_name is for caching instrument
     def instrument_payload(key)
       {
-        mailer: mailer_name,
+        texter: texter_name,
         key: key
       }
     end
 
     def instrument_name
-      "action_mailer"
+      "action_texter"
     end
 
-    ActiveSupport.run_load_hooks(:action_mailer, self)
+    ActiveSupport.run_load_hooks(:action_texter, self)
   end
 end

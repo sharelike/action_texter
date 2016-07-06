@@ -1,8 +1,8 @@
 require 'tmpdir'
 
-module ActionMailer
-  # This module handles everything related to mail delivery, from registering
-  # new delivery methods to configuring the mail object to be sent.
+module ActionTexter
+  # This module handles everything related to text delivery, from registering
+  # new delivery methods to configuring the text object to be sent.
   module DeliveryMethods
     extend ActiveSupport::Concern
 
@@ -17,12 +17,12 @@ module ActionMailer
       self.perform_deliveries = true
 
       cattr_accessor :deliver_later_queue_name
-      self.deliver_later_queue_name = :mailers
+      self.deliver_later_queue_name = :texters
 
       self.delivery_methods = {}.freeze
       self.delivery_method  = :smtp
 
-      add_delivery_method :smtp, Mail::SMTP,
+      add_delivery_method :smtp, Text::SMTP,
         address:              "localhost",
         port:                 25,
         domain:               'localhost.localdomain',
@@ -31,26 +31,26 @@ module ActionMailer
         authentication:       nil,
         enable_starttls_auto: true
 
-      add_delivery_method :file, Mail::FileDelivery,
-        location: defined?(Rails.root) ? "#{Rails.root}/tmp/mails" : "#{Dir.tmpdir}/mails"
+      add_delivery_method :file, Text::FileDelivery,
+        location: defined?(Rails.root) ? "#{Rails.root}/tmp/texts" : "#{Dir.tmpdir}/texts"
 
-      add_delivery_method :sendmail, Mail::Sendmail,
-        location:  '/usr/sbin/sendmail',
+      add_delivery_method :sendtext, Text::Sendtext,
+        location:  '/usr/sbin/sendtext',
         arguments: '-i'
 
-      add_delivery_method :test, Mail::TestMailer
+      add_delivery_method :test, Text::TestTexter
     end
 
     # Helpers for creating and wrapping delivery behavior, used by DeliveryMethods.
     module ClassMethods
-      # Provides a list of emails that have been delivered by Mail::TestMailer
-      delegate :deliveries, :deliveries=, to: Mail::TestMailer
+      # Provides a list of messages that have been delivered by Text::TestTexter
+      delegate :deliveries, :deliveries=, to: Text::TestTexter
 
       # Adds a new delivery method through the given class using the given
       # symbol as alias and the default options supplied.
       #
-      #   add_delivery_method :sendmail, Mail::Sendmail,
-      #     location:  '/usr/sbin/sendmail',
+      #   add_delivery_method :sendtext, Text::Sendtext,
+      #     location:  '/usr/sbin/sendtext',
       #     arguments: '-i -t'
       def add_delivery_method(symbol, klass, default_options={})
         class_attribute(:"#{symbol}_settings") unless respond_to?(:"#{symbol}_settings")
@@ -58,25 +58,25 @@ module ActionMailer
         self.delivery_methods = delivery_methods.merge(symbol.to_sym => klass).freeze
       end
 
-      def wrap_delivery_behavior(mail, method=nil, options=nil) # :nodoc:
+      def wrap_delivery_behavior(text, method=nil, options=nil) # :nodoc:
         method ||= self.delivery_method
-        mail.delivery_handler = self
+        text.delivery_handler = self
 
         case method
         when NilClass
           raise "Delivery method cannot be nil"
         when Symbol
           if klass = delivery_methods[method]
-            mail.delivery_method(klass, (send(:"#{method}_settings") || {}).merge(options || {}))
+            text.delivery_method(klass, (send(:"#{method}_settings") || {}).merge(options || {}))
           else
             raise "Invalid delivery method #{method.inspect}"
           end
         else
-          mail.delivery_method(method)
+          text.delivery_method(method)
         end
 
-        mail.perform_deliveries    = perform_deliveries
-        mail.raise_delivery_errors = raise_delivery_errors
+        text.perform_deliveries    = perform_deliveries
+        text.raise_delivery_errors = raise_delivery_errors
       end
     end
 

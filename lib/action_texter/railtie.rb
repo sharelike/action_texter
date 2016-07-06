@@ -1,20 +1,20 @@
 require 'active_job/railtie'
-require "action_mailer"
+require "action_texter"
 require "rails"
 require "abstract_controller/railties/routes_helpers"
 
-module ActionMailer
+module ActionTexter
   class Railtie < Rails::Railtie # :nodoc:
-    config.action_mailer = ActiveSupport::OrderedOptions.new
-    config.eager_load_namespaces << ActionMailer
+    config.action_texter = ActiveSupport::OrderedOptions.new
+    config.eager_load_namespaces << ActionTexter
 
-    initializer "action_mailer.logger" do
-      ActiveSupport.on_load(:action_mailer) { self.logger ||= Rails.logger }
+    initializer "action_texter.logger" do
+      ActiveSupport.on_load(:action_texter) { self.logger ||= Rails.logger }
     end
 
-    initializer "action_mailer.set_configs" do |app|
+    initializer "action_texter.set_configs" do |app|
       paths   = app.config.paths
-      options = app.config.action_mailer
+      options = app.config.action_texter
 
       if app.config.force_ssl
         options.default_url_options ||= {}
@@ -28,14 +28,14 @@ module ActionMailer
       options.cache_store ||= Rails.cache
 
       if options.show_previews
-        options.preview_path  ||= defined?(Rails.root) ? "#{Rails.root}/test/mailers/previews" : nil
+        options.preview_path  ||= defined?(Rails.root) ? "#{Rails.root}/test/texters/previews" : nil
       end
 
       # make sure readers methods get compiled
       options.asset_host          ||= app.config.asset_host
       options.relative_url_root   ||= app.config.relative_url_root
 
-      ActiveSupport.on_load(:action_mailer) do
+      ActiveSupport.on_load(:action_texter) do
         include AbstractController::UrlFor
         extend ::AbstractController::Railties::RoutesHelpers.with(app.routes, false)
         include app.routes.mounted_helpers
@@ -47,22 +47,22 @@ module ActionMailer
         options.each { |k,v| send("#{k}=", v) }
       end
 
-      ActiveSupport.on_load(:action_dispatch_integration_test) { include ActionMailer::TestCase::ClearTestDeliveries }
+      ActiveSupport.on_load(:action_dispatch_integration_test) { include ActionTexter::TestCase::ClearTestDeliveries }
     end
 
-    initializer "action_mailer.compile_config_methods" do
-      ActiveSupport.on_load(:action_mailer) do
+    initializer "action_texter.compile_config_methods" do
+      ActiveSupport.on_load(:action_texter) do
         config.compile_methods! if config.respond_to?(:compile_methods!)
       end
     end
 
     config.after_initialize do |app|
-      options = app.config.action_mailer
+      options = app.config.action_texter
 
       if options.show_previews
         app.routes.prepend do
-          get '/rails/mailers'         => "rails/mailers#index", internal: true
-          get '/rails/mailers/*path'   => "rails/mailers#preview", internal: true
+          get '/rails/texters'         => "rails/texters#index", internal: true
+          get '/rails/texters/*path'   => "rails/texters#preview", internal: true
         end
 
         if options.preview_path

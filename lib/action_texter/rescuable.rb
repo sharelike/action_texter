@@ -1,6 +1,6 @@
-module ActionMailer #:nodoc:
-  # Provides `rescue_from` for mailers. Wraps mailer action processing,
-  # mail job processing, and mail delivery.
+module ActionTexter #:nodoc:
+  # Provides `rescue_from` for texters. Wraps texter action processing,
+  # text job processing, and text delivery.
   module Rescuable
     extend ActiveSupport::Concern
     include ActiveSupport::Rescuable
