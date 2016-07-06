@@ -19,7 +19,7 @@ module ActionTexter
   # The generated model inherits from <tt>ApplicationTexter</tt> which in turn
   # inherits from <tt>ActionTexter::Base</tt>. A texter model defines methods
   # used to generate an message message. In these methods, you can setup variables to be used in
-  # the texter views, options on the text itself such as the <tt>:from</tt> address, and attachments.
+  # the texter views, options on the text itself such as the <tt>:from</tt> address.
   #
   #   class ApplicationTexter < ActionTexter::Base
   #     default from: 'from@example.com'
@@ -38,12 +38,6 @@ module ActionTexter
   #   end
   #
   # Within the texter method, you have access to the following methods:
-  #
-  # * <tt>attachments[]=</tt> - Allows you to add attachments to your message in an intuitive
-  #   manner; <tt>attachments['filename.png'] = File.read('path/to/filename.png')</tt>
-  #
-  # * <tt>attachments.inline[]=</tt> - Allows you to add an inline attachment to your message
-  #   in the same manner as <tt>attachments[]=</tt>
   #
   # * <tt>headers[]=</tt> - Allows you to specify any header field in your message such
   #   as <tt>headers['X-No-Spam'] = 'True'</tt>. Note that declaring a header multiple times
@@ -176,76 +170,6 @@ module ActionTexter
   # type. The content type for the entire message is automatically set to <tt>multipart/alternative</tt>,
   # which indicates that the message contains multiple different representations of the same message
   # body. The same instance variables defined in the action are passed to all message templates.
-  #
-  # Implicit template rendering is not performed if any attachments or parts have been added to the message.
-  # This means that you'll have to manually add each part to the message and set the content type of the message
-  # to <tt>multipart/alternative</tt>.
-  #
-  # = Attachments
-  #
-  # Sending attachment in messages is easy:
-  #
-  #   class NotifierTexter < ApplicationTexter
-  #     def welcome(recipient)
-  #       attachments['free_book.pdf'] = File.read('path/to/file.pdf')
-  #       text(to: recipient, subject: "New account information")
-  #     end
-  #   end
-  #
-  # Which will (if it had both a <tt>welcome.text.erb</tt> and <tt>welcome.html.erb</tt>
-  # template in the view directory), send a complete <tt>multipart/mixed</tt> message with two parts,
-  # the first part being a <tt>multipart/alternative</tt> with the text and HTML message parts inside,
-  # and the second being a <tt>application/pdf</tt> with a Base64 encoded copy of the file.pdf book
-  # with the filename +free_book.pdf+.
-  #
-  # If you need to send attachments with no content, you need to create an empty view for it,
-  # or add an empty body parameter like this:
-  #
-  #     class NotifierTexter < ApplicationTexter
-  #       def welcome(recipient)
-  #         attachments['free_book.pdf'] = File.read('path/to/file.pdf')
-  #         text(to: recipient, subject: "New account information", body: "")
-  #       end
-  #     end
-  #
-  # = Inline Attachments
-  #
-  # You can also specify that a file should be displayed inline with other HTML. This is useful
-  # if you want to display a corporate logo or a photo.
-  #
-  #   class NotifierTexter < ApplicationTexter
-  #     def welcome(recipient)
-  #       attachments.inline['photo.png'] = File.read('path/to/photo.png')
-  #       text(to: recipient, subject: "Here is what we look like")
-  #     end
-  #   end
-  #
-  # And then to reference the image in the view, you create a <tt>welcome.html.erb</tt> file and
-  # make a call to +image_tag+ passing in the attachment you want to display and then call
-  # +url+ on the attachment to get the relative content id path for the image source:
-  #
-  #   <h1>Please Don't Cringe</h1>
-  #
-  #   <%= image_tag attachments['photo.png'].url -%>
-  #
-  # As we are using Action View's +image_tag+ method, you can pass in any other options you want:
-  #
-  #   <h1>Please Don't Cringe</h1>
-  #
-  #   <%= image_tag attachments['photo.png'].url, alt: 'Our Photo', class: 'photo' -%>
-  #
-  # = Observing and Intercepting Texts
-  #
-  # Action Texter provides hooks into the Text observer and interceptor methods. These allow you to
-  # register classes that are called during the text delivery life cycle.
-  #
-  # An observer class must implement the <tt>:delivered_message(message)</tt> method which will be
-  # called once for every message sent after the message has been sent.
-  #
-  # An interceptor class must implement the <tt>:delivering_message(message)</tt> method which will be
-  # called before the message is sent, allowing you to make modifications to the message before it hits
-  # the delivery agents. Your class should make any needed modifications directly to the passed
-  # in <tt>Text::Message</tt> instance.
   #
   # = Default Hash
   #
@@ -597,55 +521,6 @@ module ActionTexter
       end
     end
 
-    # Allows you to add attachments to an message, like so:
-    #
-    #  text.attachments['filename.jpg'] = File.read('/path/to/filename.jpg')
-    #
-    # If you do this, then Text will take the file name and work out the mime type.
-    # It will also set the Content-Type, Content-Disposition, Content-Transfer-Encoding
-    # and encode the contents of the attachment in Base64.
-    #
-    # You can also specify overrides if you want by passing a hash instead of a string:
-    #
-    #  text.attachments['filename.jpg'] = {mime_type: 'application/gzip',
-    #                                      content: File.read('/path/to/filename.jpg')}
-    #
-    # If you want to use encoding other than Base64 then you will need to pass encoding
-    # type along with the pre-encoded content as Text doesn't know how to decode the
-    # data:
-    #
-    #  file_content = SpecialEncode(File.read('/path/to/filename.jpg'))
-    #  text.attachments['filename.jpg'] = {mime_type: 'application/gzip',
-    #                                      encoding: 'SpecialEncoding',
-    #                                      content: file_content }
-    #
-    # You can also search for specific attachments:
-    #
-    #  # By Filename
-    #  text.attachments['filename.jpg']   # => Text::Part object or nil
-    #
-    #  # or by index
-    #  text.attachments[0]                # => Text::Part (first attachment)
-    #
-    def attachments
-      if @_text_was_called
-        LateAttachmentsProxy.new(@_message.attachments)
-      else
-        @_message.attachments
-      end
-    end
-
-    class LateAttachmentsProxy < SimpleDelegator
-      def inline; _raise_error end
-      def []=(_name, _content); _raise_error end
-
-      private
-        def _raise_error
-          raise RuntimeError, "Can't add attachments after `text` was called.\n" \
-                              "Make sure to use `attachments[]=` before calling `text`."
-        end
-    end
-
     # The main method that creates the message and renders the message templates. There are
     # two ways to call this method, with a block, or without a block.
     #
@@ -774,24 +649,15 @@ module ActionTexter
 
     # Used by #text to set the content type of the message.
     #
-    # It will use the given +user_content_type+, or multipart if the text
-    # message has any attachments. If the attachments are inline, the content
-    # type will be "multipart/related", otherwise "multipart/mixed".
+    # It will use the given +user_content_type+.
     #
-    # If there is no content type passed in via headers, and there are no
-    # attachments, or the message is multipart, then the default content type is
-    # used.
+    # If there is no content type passed in via headers or the message is multipart,
+    # then the default content type is used.
     def set_content_type(m, user_content_type, class_default)
       params = m.content_type_parameters || {}
       case
       when user_content_type.present?
         user_content_type
-      when m.has_attachments?
-        if m.attachments.detect(&:inline?)
-          ["multipart", "related", params]
-        else
-          ["multipart", "mixed", params]
-        end
       when m.multipart?
         ["multipart", "alternative", params]
       else
@@ -872,13 +738,8 @@ module ActionTexter
     end
 
     def create_parts_from_responses(m, responses)
-      if responses.size == 1 && !m.has_attachments?
+      if responses.size == 1
         responses[0].each { |k,v| m[k] = v }
-      elsif responses.size > 1 && m.has_attachments?
-        container = Text::Part.new
-        container.content_type = "multipart/alternative"
-        responses.each { |r| insert_part(container, r, m.charset) }
-        m.add_part(container)
       else
         responses.each { |r| insert_part(m, r, m.charset) }
       end

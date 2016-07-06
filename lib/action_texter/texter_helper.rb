@@ -1,7 +1,6 @@
 module ActionTexter
   # Provides helper methods for ActionTexter::Base that can be used for easily
-  # formatting messages, accessing texter or message instances, and the
-  # attachments list.
+  # formatting messages, accessing texter or message instances.
   module TexterHelper
     # Take the text and format it, indented two spaces for each line, and
     # wrapped at 72 columns:
@@ -35,11 +34,6 @@ module ActionTexter
     # Access the message instance.
     def message
       @_message
-    end
-
-    # Access the message attachments list.
-    def attachments
-      texter.attachments
     end
 
     # Returns +text+ wrapped at +len+ columns and indented +indent+ spaces.
