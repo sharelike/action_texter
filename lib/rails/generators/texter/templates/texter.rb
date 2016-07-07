@@ -2,15 +2,10 @@
 class <%= class_name %>Texter < ApplicationTexter
 <% actions.each do |action| -%>
 
-  # Subject can be set in your I18n file at config/locales/en.yml
-  # with the following lookup:
-  #
-  #   en.<%= file_path.tr("/",".") %>_texter.<%= action %>.subject
-  #
   def <%= action %>
     @greeting = "Hi"
 
-    text to: "to@example.org"
+    text to: "+886900000000"
   end
 <% end -%>
 end
