@@ -1,0 +1,118 @@
+= Action Texter -- Deliver text messages just like Action Mailer
+
+Action Texter is a framework inspired from {Action Mailer v5.0.0}[https://github.com/rails/rails/tree/v5.0.0/actionmailer] for designing text message service layers.
+These layers are used to consolidate code for sending out forgotten passwords, welcome
+wishes on signup, invoices for billing, and any other use case that requires
+a written notification to either a person or another system by text messages or other
+messaging system.
+
+Action Texter is in essence a wrapper around Abstract Controller and the
+delivery adapters.  It provides a way to make text messages using templates in
+the same way that Action Controller renders views using templates, just like
+what Action Mailer does.
+
+== Sending text messages
+
+The framework works by initializing any instance variables you want to be
+available in the message template, followed by a call to +text+ to deliver
+the message.
+
+This can be as simple as:
+
+  class Notifier < ActionTexter::Base
+    def welcome(recipient)
+      @recipient = recipient
+      text to: recipient
+    end
+  end
+
+The body of the message is created by using an Action View template (regular
+ERB) that has the instance variables that are declared in the texter action.
+
+So the corresponding body template for the method above could look like this:
+
+  Hello there,
+
+  Your phone number: <%= @recipient %> is registered.
+
+  Thank you for signing up!
+
+If the recipient was given as "+886987654321", the text message generated would
+look like this:
+
+  Hello there,
+
+  Your phone number: +886987654321 is registered.
+
+  Thank you for signing up!
+
+In order to send text messages, you simply call the method and then call +deliver_now+ on the
+return value. (Just like Action Mailer :tada:)
+
+Calling the method returns a Message object:
+
+  message = Notifier.welcome("+886987654321")   # => Returns a wrapper with a ActionTexter::Message object
+  message.deliver_now                           # => delivers the text message
+
+Or you can just chain the methods together like:
+
+  Notifier.welcome("+886987654321").deliver_now # Creates the text message and sends it immediately
+
+== Setting defaults
+
+It is possible to set default values that will be used in every method in your
+Action Texter class. To implement this functionality, you just call the public
+class method +default+ which you get for free from <tt>ActionTexter::Base</tt>.
+This method accepts a Hash as the parameter. Like Action Mailer, it is also
+possible to pass in a Proc that will get evaluated when it is needed.
+
+Note that every value you set with this method will get overwritten if you use the
+same key in your texter method.
+
+Example:
+
+  class Authenticationtexter < ActionTexter::Base
+    default charset: "UTF-8", to: Proc.new { recipients.sample }
+    .....
+  end
+
+== Configuration
+
+The Base class has the full list of configuration options. Here's an example:
+
+  ActionTexter::Base.file_settings = {
+    location: "/tmp/texter" # => The path for saving messages with file adapter
+  }
+
+This can also be configured in `Rails.application.configure` block, like this:
+
+  Rails.application.configure do
+    config.action_texter.delivery_method = :file # => Pick a adapter for sending message
+    config.action_texter.file_settings = {
+      location: "/tmp/texter"
+    }
+  end
+
+== Download and installation
+
+The latest version of Action Texter can be installed with RubyGems:
+
+  $ gem install actiontexter
+
+Source code can be downloaded on GitHub
+
+* https://github.com/sharelike/action_texter
+
+
+== License
+
+Action Texter is released under the MIT license:
+
+* http://www.opensource.org/licenses/MIT
+
+
+== Support
+
+Bug reports can be here:
+
+* https://github.com/sharelike/action_texter/issues
