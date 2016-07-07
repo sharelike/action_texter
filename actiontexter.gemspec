@@ -1,28 +1,26 @@
-version = File.read(File.expand_path('../../RAILS_VERSION', __FILE__)).strip
+$:.unshift File.expand_path('../lib', __FILE__)
+require 'actiontexter/gem_version'
 
 Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
-  s.name        = 'actionmailer'
-  s.version     = version
-  s.summary     = 'Email composition, delivery, and receiving framework (part of Rails).'
-  s.description = 'Email on Rails. Compose, deliver, receive, and test emails using the familiar controller/view pattern. First-class support for multipart email and attachments.'
+  s.name        = 'actiontexter'
+  s.version     = ActionTexter::VERSION::STRING
+  s.summary     = 'Text message composition and delivery framework (inspired from Action Mailer, part of Rails).'
+  s.description = 'Text message on Rails. Compose, deliver, and test text message using the familiar controller/view pattern.'
 
   s.required_ruby_version = '>= 2.2.2'
 
   s.license = 'MIT'
 
-  s.author   = 'David Heinemeier Hansson'
-  s.email    = 'david@loudthinking.com'
-  s.homepage = 'http://rubyonrails.org'
+  s.author   = 'Sharelike Inc.'
+  s.email    = 'dev@sharelike.asia'
+  s.homepage = 'http://sharelike.asia'
 
-  s.files        = Dir['CHANGELOG.md', 'README.rdoc', 'MIT-LICENSE', 'lib/**/*']
+  s.files        = Dir['README.rdoc', 'MIT-LICENSE', 'lib/**/*']
   s.require_path = 'lib'
   s.requirements << 'none'
 
-  s.add_dependency 'actionpack', version
-  s.add_dependency 'actionview', version
-  s.add_dependency 'activejob', version
-
-  s.add_dependency 'mail', ['~> 2.5', '>= 2.5.4']
-  s.add_dependency 'rails-dom-testing', '~> 2.0'
+  s.add_dependency 'actionpack', '~> 5.0.0'
+  s.add_dependency 'actionview', '~> 5.0.0'
+  s.add_dependency 'activejob',  '~> 5.0.0'
 end
