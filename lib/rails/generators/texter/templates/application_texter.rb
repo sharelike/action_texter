@@ -1,6 +1,6 @@
 <% module_namespacing do -%>
-class ApplicationMailer < ActionMailer::Base
+class ApplicationTexter < ActionTexter::Base
   default from: 'from@example.com'
-  layout 'mailer'
+  layout 'texter'
 end
 <% end %>

@@ -1,8 +1,8 @@
-module ActionMailer
-  # Provides helper methods for ActionMailer::Base that can be used for easily
-  # formatting messages, accessing mailer or message instances, and the
+module ActionTexter
+  # Provides helper methods for ActionTexter::Base that can be used for easily
+  # formatting messages, accessing texter or message instances, and the
   # attachments list.
-  module MailHelper
+  module TextHelper
     # Take the text and format it, indented two spaces for each line, and
     # wrapped at 72 columns:
     #
@@ -27,8 +27,8 @@ module ActionMailer
       formatted
     end
 
-    # Access the mailer instance.
-    def mailer
+    # Access the texter instance.
+    def texter
       @_controller
     end
 
@@ -39,7 +39,7 @@ module ActionMailer
 
     # Access the message attachments list.
     def attachments
-      mailer.attachments
+      texter.attachments
     end
 
     # Returns +text+ wrapped at +len+ columns and indented +indent+ spaces.

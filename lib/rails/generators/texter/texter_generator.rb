@@ -1,18 +1,18 @@
 module Rails
   module Generators
-    class MailerGenerator < NamedBase
+    class TexterGenerator < NamedBase
       source_root File.expand_path("../templates", __FILE__)
 
       argument :actions, type: :array, default: [], banner: "method method"
 
-      check_class_collision suffix: "Mailer"
+      check_class_collision suffix: "Texter"
 
-      def create_mailer_file
-        template "mailer.rb", File.join('app/mailers', class_path, "#{file_name}_mailer.rb")
+      def create_texter_file
+        template "texter.rb", File.join('app/texters', class_path, "#{file_name}_texter.rb")
 
         in_root do
-          if self.behavior == :invoke && !File.exist?(application_mailer_file_name)
-            template 'application_mailer.rb', application_mailer_file_name
+          if self.behavior == :invoke && !File.exist?(application_texter_file_name)
+            template 'application_texter.rb', application_texter_file_name
           end
         end
       end
@@ -21,15 +21,15 @@ module Rails
 
       protected
         def file_name
-          @_file_name ||= super.gsub(/_mailer/i, '')
+          @_file_name ||= super.gsub(/_texter/i, '')
         end
 
       private
-        def application_mailer_file_name
-          @_application_mailer_file_name ||= if mountable_engine?
-                                             "app/mailers/#{namespaced_path}/application_mailer.rb"
+        def application_texter_file_name
+          @_application_texter_file_name ||= if mountable_engine?
+                                             "app/texters/#{namespaced_path}/application_texter.rb"
                                            else
-                                             "app/mailers/application_mailer.rb"
+                                             "app/texters/application_texter.rb"
                                            end
         end
     end

@@ -1,21 +1,21 @@
 require 'base64'
 
-module ActionMailer
-  # Implements a mailer preview interceptor that converts image tag src attributes
+module ActionTexter
+  # Implements a texter preview interceptor that converts image tag src attributes
   # that use inline cid: style urls to data: style urls so that they are visible
-  # when previewing an HTML email in a web browser.
+  # when previewing an HTML message in a web browser.
   #
   # This interceptor is enabled by default. To disable it, delete it from the
-  # <tt>ActionMailer::Base.preview_interceptors</tt> array:
+  # <tt>ActionTexter::Base.preview_interceptors</tt> array:
   #
-  #   ActionMailer::Base.preview_interceptors.delete(ActionMailer::InlinePreviewInterceptor)
+  #   ActionTexter::Base.preview_interceptors.delete(ActionTexter::InlinePreviewInterceptor)
   #
   class InlinePreviewInterceptor
     PATTERN  = /src=(?:"cid:[^"]+"|'cid:[^']+')/i
 
     include Base64
 
-    def self.previewing_email(message) #:nodoc:
+    def self.previewing_message(message) #:nodoc:
       new(message).transform!
     end
 

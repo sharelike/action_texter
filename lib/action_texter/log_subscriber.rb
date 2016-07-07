@@ -1,39 +1,39 @@
 require 'active_support/log_subscriber'
 
-module ActionMailer
+module ActionTexter
   # Implements the ActiveSupport::LogSubscriber for logging notifications when
-  # email is delivered or received.
+  # message is delivered or received.
   class LogSubscriber < ActiveSupport::LogSubscriber
-    # An email was delivered.
+    # An message was delivered.
     def deliver(event)
       info do
         recipients = Array(event.payload[:to]).join(', ')
-        "Sent mail to #{recipients} (#{event.duration.round(1)}ms)"
+        "Sent text to #{recipients} (#{event.duration.round(1)}ms)"
       end
 
-      debug { event.payload[:mail] }
+      debug { event.payload[:text] }
     end
 
-    # An email was received.
+    # An message was received.
     def receive(event)
-      info { "Received mail (#{event.duration.round(1)}ms)" }
-      debug { event.payload[:mail] }
+      info { "Received text (#{event.duration.round(1)}ms)" }
+      debug { event.payload[:text] }
     end
 
-    # An email was generated.
+    # An message was generated.
     def process(event)
       debug do
-        mailer = event.payload[:mailer]
+        texter = event.payload[:texter]
         action = event.payload[:action]
-        "#{mailer}##{action}: processed outbound mail in #{event.duration.round(1)}ms"
+        "#{texter}##{action}: processed outbound text in #{event.duration.round(1)}ms"
       end
     end
 
-    # Use the logger configured for ActionMailer::Base.
+    # Use the logger configured for ActionTexter::Base.
     def logger
-      ActionMailer::Base.logger
+      ActionTexter::Base.logger
     end
   end
 end
 
-ActionMailer::LogSubscriber.attach_to :action_mailer
+ActionTexter::LogSubscriber.attach_to :action_texter

@@ -1,11 +1,11 @@
 require 'active_support/test_case'
 require 'rails-dom-testing'
 
-module ActionMailer
-  class NonInferrableMailerError < ::StandardError
+module ActionTexter
+  class NonInferrableTexterError < ::StandardError
     def initialize(name)
-      super "Unable to determine the mailer to test from #{name}. " +
-        "You'll need to specify it using tests YourMailer in your " +
+      super "Unable to determine the texter to test from #{name}. " +
+        "You'll need to specify it using tests YourTexter in your " +
         "test case definition"
     end
   end
@@ -22,8 +22,8 @@ module ActionMailer
       private
 
       def clear_test_deliveries
-        if ActionMailer::Base.delivery_method == :test
-          ActionMailer::Base.deliveries.clear
+        if ActionTexter::Base.delivery_method == :test
+          ActionTexter::Base.deliveries.clear
         end
       end
     end
@@ -37,38 +37,38 @@ module ActionMailer
       include Rails::Dom::Testing::Assertions::DomAssertions
 
       included do
-        class_attribute :_mailer_class
+        class_attribute :_texter_class
         setup :initialize_test_deliveries
-        setup :set_expected_mail
+        setup :set_expected_text
         teardown :restore_test_deliveries
       end
 
       module ClassMethods
-        def tests(mailer)
-          case mailer
+        def tests(texter)
+          case texter
           when String, Symbol
-            self._mailer_class = mailer.to_s.camelize.constantize
+            self._texter_class = texter.to_s.camelize.constantize
           when Module
-            self._mailer_class = mailer
+            self._texter_class = texter
           else
-            raise NonInferrableMailerError.new(mailer)
+            raise NonInferrableTexterError.new(texter)
           end
         end
 
-        def mailer_class
-          if mailer = self._mailer_class
-            mailer
+        def texter_class
+          if texter = self._texter_class
+            texter
           else
-            tests determine_default_mailer(name)
+            tests determine_default_texter(name)
           end
         end
 
-        def determine_default_mailer(name)
-          mailer = determine_constant_from_test_name(name) do |constant|
-            Class === constant && constant < ActionMailer::Base
+        def determine_default_texter(name)
+          texter = determine_constant_from_test_name(name) do |constant|
+            Class === constant && constant < ActionTexter::Base
           end
-          raise NonInferrableMailerError.new(name) if mailer.nil?
-          mailer
+          raise NonInferrableTexterError.new(name) if texter.nil?
+          texter
         end
       end
 
@@ -76,28 +76,28 @@ module ActionMailer
 
         def initialize_test_deliveries # :nodoc:
           set_delivery_method :test
-          @old_perform_deliveries = ActionMailer::Base.perform_deliveries
-          ActionMailer::Base.perform_deliveries = true
-          ActionMailer::Base.deliveries.clear
+          @old_perform_deliveries = ActionTexter::Base.perform_deliveries
+          ActionTexter::Base.perform_deliveries = true
+          ActionTexter::Base.deliveries.clear
         end
 
         def restore_test_deliveries # :nodoc:
           restore_delivery_method
-          ActionMailer::Base.perform_deliveries = @old_perform_deliveries
+          ActionTexter::Base.perform_deliveries = @old_perform_deliveries
         end
 
         def set_delivery_method(method) # :nodoc:
-          @old_delivery_method = ActionMailer::Base.delivery_method
-          ActionMailer::Base.delivery_method = method
+          @old_delivery_method = ActionTexter::Base.delivery_method
+          ActionTexter::Base.delivery_method = method
         end
 
         def restore_delivery_method # :nodoc:
-          ActionMailer::Base.deliveries.clear
-          ActionMailer::Base.delivery_method = @old_delivery_method
+          ActionTexter::Base.deliveries.clear
+          ActionTexter::Base.delivery_method = @old_delivery_method
         end
 
-        def set_expected_mail # :nodoc:
-          @expected = Mail.new
+        def set_expected_text # :nodoc:
+          @expected = Text.new
           @expected.content_type ["text", "plain", { "charset" => charset }]
           @expected.mime_version = '1.0'
         end
@@ -109,11 +109,11 @@ module ActionMailer
         end
 
         def encode(subject)
-          Mail::Encodings.q_value_encode(subject, charset)
+          Text::Encodings.q_value_encode(subject, charset)
         end
 
         def read_fixture(action)
-          IO.readlines(File.join(Rails.root, 'test', 'fixtures', self.class.mailer_class.name.underscore, action))
+          IO.readlines(File.join(Rails.root, 'test', 'fixtures', self.class.texter_class.name.underscore, action))
         end
     end
 
