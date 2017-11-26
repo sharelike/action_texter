@@ -18,10 +18,10 @@ module ActionTexter #:nodoc:
     end
 
     private
-      def process(*)
-        handle_exceptions do
-          super
-        end
+    def process(*)
+      handle_exceptions do
+        super
       end
+    end
   end
 end

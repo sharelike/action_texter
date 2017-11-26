@@ -37,31 +37,31 @@ module ActionTexter
 
       # Adds a new delivery method through the given class using the given
       # symbol as alias and the default options supplied.
-      def add_delivery_method(symbol, klass, default_options={})
+      def add_delivery_method(symbol, klass, default_options = {})
         class_attribute(:"#{symbol}_settings") unless respond_to?(:"#{symbol}_settings")
         send(:"#{symbol}_settings=", default_options)
         self.delivery_methods = delivery_methods.merge(symbol.to_sym => klass).freeze
       end
 
-      def wrap_delivery_behavior(text, method=nil, options=nil) # :nodoc:
+      def wrap_delivery_behavior(message, method = nil, options = nil) # :nodoc:
         method ||= self.delivery_method
-        text.delivery_handler = self
+        message.delivery_handler = self
 
         case method
         when NilClass
           raise "Delivery method cannot be nil"
         when Symbol
           if klass = delivery_methods[method]
-            text.delivery_method = klass.new (send(:"#{method}_settings") || {}).merge(options || {}))
+            message.delivery_method = klass.new (send(:"#{method}_settings") || {}).merge(options || {})
           else
             raise "Invalid delivery method #{method.inspect}"
           end
         else
-          text.delivery_method = method
+          message.delivery_method = method
         end
 
-        text.perform_deliveries    = perform_deliveries
-        text.raise_delivery_errors = raise_delivery_errors
+        message.perform_deliveries    = perform_deliveries
+        message.raise_delivery_errors = raise_delivery_errors
       end
     end
 

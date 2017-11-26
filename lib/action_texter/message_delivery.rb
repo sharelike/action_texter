@@ -5,18 +5,18 @@ module ActionTexter
   # <tt>ActionTexter::Base</tt> when creating a new texter.
   # <tt>MessageDelivery</tt> is a wrapper (+Delegator+ subclass) around a lazy
   # created <tt>ActionTexter::Message</tt>. You can get direct access to the
-  # <tt>ActionTexter::Message</tt>, deliver the message or schedule the message to be sent
-  # through Active Job.
+  # <tt>ActionTexter::Message</tt>, deliver the text or schedule the text to
+  # be sent through Active Job.
   #
   #   Notifier.welcome(User.first)               # an ActionTexter::MessageDelivery object
-  #   Notifier.welcome(User.first).deliver_now   # sends the message
-  #   Notifier.welcome(User.first).deliver_later # enqueue message delivery as a job through Active Job
+  #   Notifier.welcome(User.first).deliver_now   # sends the text
+  #   Notifier.welcome(User.first).deliver_later # enqueue text delivery as a job through Active Job
   #   Notifier.welcome(User.first).message       # a ActionTexter::Message object
   class MessageDelivery < Delegator
     def initialize(texter_class, action, *args) #:nodoc:
       @texter_class, @action, @args = texter_class, action, args
 
-      # The text is only processed if we try to call any methods on it.
+      # The message is only processed if we try to call any methods on it.
       # Typical usage will leave it unloaded and call deliver_later.
       @processed_texter = nil
       @message = nil
@@ -98,28 +98,28 @@ module ActionTexter
     end
 
     private
-      # Returns the processed Texter instance. We keep this instance
-      # on hand so we can delegate exception handling to it.
-      def processed_texter
-        @processed_texter ||= @texter_class.new.tap do |texter|
-          texter.process @action, *@args
-        end
+    # Returns the processed Texter instance. We keep this instance
+    # on hand so we can delegate exception handling to it.
+    def processed_texter
+      @processed_texter ||= @texter_class.new.tap do |texter|
+        texter.process @action, *@args
       end
+    end
 
-      def enqueue_delivery(delivery_method, options={})
-        if processed?
-          ::Kernel.raise "You've accessed the message before asking to " \
-            "deliver it later, so you may have made local changes that would " \
-            "be silently lost if we enqueued a job to deliver it. Why? Only " \
-            "the texter method *arguments* are passed with the delivery job! " \
-            "Do not access the message in any way if you mean to deliver it " \
-            "later. Workarounds: 1. don't touch the message before calling " \
-            "#deliver_later, 2. only touch the message *within your texter " \
-            "method*, or 3. use a custom Active Job instead of #deliver_later."
-        else
-          args = @texter_class.name, @action.to_s, delivery_method.to_s, *@args
-          ::ActionTexter::DeliveryJob.set(options).perform_later(*args)
-        end
+    def enqueue_delivery(delivery_method, options={})
+      if processed?
+        ::Kernel.raise "You've accessed the message before asking to " \
+          "deliver it later, so you may have made local changes that would " \
+          "be silently lost if we enqueued a job to deliver it. Why? Only " \
+          "the texter method *arguments* are passed with the delivery job! " \
+          "Do not access the message in any way if you mean to deliver it " \
+          "later. Workarounds: 1. don't touch the message before calling " \
+          "#deliver_later, 2. only touch the message *within your texter " \
+          "method*, or 3. use a custom Active Job instead of #deliver_later."
+      else
+        args = @texter_class.name, @action.to_s, delivery_method.to_s, *@args
+        ::ActionTexter::DeliveryJob.set(options).perform_later(*args)
       end
+    end
   end
 end

@@ -1,7 +1,7 @@
 require 'active_job/railtie'
-require "action_texter"
-require "rails"
-require "abstract_controller/railties/routes_helpers"
+require 'action_texter'
+require 'rails'
+require 'abstract_controller/railties/routes_helpers'
 
 module ActionTexter
   class Railtie < Rails::Railtie # :nodoc:
@@ -40,7 +40,7 @@ module ActionTexter
       end
     end
 
-    config.after_initialize do |app|
+    config.before_configuration do |app|
       app.config.paths.add "app/texters", eager_load: true
     end
   end

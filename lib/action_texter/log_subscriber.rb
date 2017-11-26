@@ -11,7 +11,7 @@ module ActionTexter
         "Sent text message to #{recipients} (#{event.duration.round(1)}ms)"
       end
 
-      debug { event.payload[:text] }
+      debug { event.payload[:body] }
     end
 
     # An message was generated.

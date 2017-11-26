@@ -234,7 +234,7 @@ module ActionTexter
 
     class_attribute :default_params
     self.default_params = {
-      charset:      "UTF-8"
+      charset: "UTF-8"
     }.freeze
 
     class << self
@@ -267,16 +267,16 @@ module ActionTexter
       # through a callback when you call <tt>:deliver</tt> on the <tt>ActionTexter::Message</tt>,
       # calling +deliver_text+ directly and passing a <tt>ActionTexter::Message</tt> will do
       # nothing except tell the logger you sent the message.
-      def deliver_text(text) #:nodoc:
+      def deliver_text(message) #:nodoc:
         ActiveSupport::Notifications.instrument("deliver.action_texter") do |payload|
           payload[:texter] = name
           payload[:to] = message.to
           payload[:body] = message.body
-          yield # Let Text do the delivery actions
+          yield # Let Message do the delivery actions
         end
       end
 
-    protected
+      protected
 
       def method_missing(method_name, *args) # :nodoc:
         if action_methods.include?(method_name.to_s)
@@ -286,7 +286,7 @@ module ActionTexter
         end
       end
 
-    private
+      private
 
       def respond_to_missing?(method, include_all = false) #:nodoc:
         action_methods.include?(method.to_s)
@@ -320,7 +320,7 @@ module ActionTexter
       def to; [] end
       def body; '' end
 
-      def respond_to?(string, include_all=false)
+      def respond_to?(string, include_all = false)
         true
       end
 
@@ -373,7 +373,7 @@ module ActionTexter
     # And now it will look for all templates at "app/views/notifications" with name "another".
     #
     def text(options = {})
-      return message if @_text_was_called && options.blank?
+      return message if @_text_was_called
 
       options = apply_defaults(options)
 
@@ -384,8 +384,8 @@ module ActionTexter
 
       message.to = options[:to]
 
-      # Render the template
-      responses = response(options)
+      # Render the templates
+      message.body = response(options)
       @_text_was_called = true
 
       message
@@ -411,18 +411,18 @@ module ActionTexter
       options.reverse_merge(default_values)
     end
 
-    def response(optionss)
+    def response(options)
       if options[:body]
         options.delete(:body)
       else
-        response_from_template(options)
+        response_from_templates(options)
       end
     end
 
     # Now we only support .text/.txt format for SMS
-    def response_from_template(options)
-      templates_path = options[:template_path] || self.class.texter_name
-      templates_name = options[:template_name] || action_name
+    def response_from_templates(options)
+      templates_path = options[:templates_path] || self.class.texter_name
+      templates_name = options[:templates_name] || action_name
 
       templates_paths = Array(templates_path)
       template = lookup_context.find(templates_name, templates_paths, nil, [], { formats: [:txt, :text] })

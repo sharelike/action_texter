@@ -15,20 +15,21 @@ module ActionTexter
     end
 
     private
-      # "Deserialize" the texter class name by hand in case another argument
-      # (like a Global ID reference) raised DeserializationError.
-      def texter_class
-        if texter = Array(@serialized_arguments).first || Array(arguments).first
-          texter.constantize
-        end
-      end
 
-      def handle_exception_with_texter_class(exception)
-        if klass = texter_class
-          klass.handle_exception exception
-        else
-          raise exception
-        end
+    # "Deserialize" the texter class name by hand in case another argument
+    # (like a Global ID reference) raised DeserializationError.
+    def texter_class
+      if texter = Array(@serialized_arguments).first || Array(arguments).first
+        texter.constantize
       end
+    end
+
+    def handle_exception_with_texter_class(exception)
+      if klass = texter_class
+        klass.handle_exception exception
+      else
+        raise exception
+      end
+    end
   end
 end
