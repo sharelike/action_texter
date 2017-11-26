@@ -1,5 +1,5 @@
 $:.unshift File.expand_path('../lib', __FILE__)
-require 'actiontexter/gem_version'
+require 'action_texter/gem_version'
 
 Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
