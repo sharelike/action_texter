@@ -13,8 +13,8 @@ Gem::Specification.new do |s|
   s.license = 'MIT'
 
   s.author   = 'Sharelike Inc.'
-  s.email    = 'dev@sharelike.asia'
-  s.homepage = 'http://sharelike.asia'
+  s.email    = 'engineers@sharelike.asia'
+  s.homepage = 'https://sharelike.asia'
 
   s.files        = Dir['README.rdoc', 'MIT-LICENSE', 'lib/**/*']
   s.require_path = 'lib'
