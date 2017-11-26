@@ -20,7 +20,7 @@ Gem::Specification.new do |s|
   s.require_path = 'lib'
   s.requirements << 'none'
 
-  s.add_dependency 'actionpack', '~> 5.0.0'
-  s.add_dependency 'actionview', '~> 5.0.0'
-  s.add_dependency 'activejob',  '~> 5.0.0'
+  s.add_dependency 'actionpack', '~> 5.0'
+  s.add_dependency 'actionview', '~> 5.0'
+  s.add_dependency 'activejob',  '~> 5.0'
 end
